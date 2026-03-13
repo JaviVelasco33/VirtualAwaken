@@ -1,0 +1,55 @@
+# ============================================================
+#  UNREAL ENGINE 5 - .gitignore
+# ============================================================
+
+# Auto-generated folders
+Binaries/
+Build/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Compiled plugin folders (only if not custom)
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# Visual Studio files
+.vs/
+*.sln
+*.suo
+*.user
+*.VC.db
+*.VC.opendb
+
+# Rider files (JetBrains)
+.idea/
+
+# VS Code files
+.vscode/
+
+# Generated project files
+*.vcxproj
+*.vcxproj.filters
+
+# Unreal cache files
+*.gens
+*.db
+*.opensdf
+*.sdf
+FeaturePack/
+Templates/
+
+# Log files
+*.log
+
+# Crash files
+Crash/
+CrashReportClient/
+
+# Packages and releases
+Packages/
+Releases/
+Stage/
+
+# Content folders specifically excluded
+Content/UE_Characters/
