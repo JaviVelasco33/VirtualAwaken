@@ -87,6 +87,9 @@ protected:
 #pragma region INTERACTION SETTINGS
 		// Function called by the Input
 		void Interact();
+
+    bool bIsRotatingToInteract = false;
+    FRotator TargetInteractRotation;
 #pragma endregion
 
 #pragma region ATTRIBUTES

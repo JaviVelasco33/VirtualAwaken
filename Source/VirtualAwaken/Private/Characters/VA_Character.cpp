@@ -80,6 +80,17 @@ void AVA_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (bIsRotatingToInteract)
+	{
+		FRotator CurrentRot = GetActorRotation();
+    FRotator SmoothRot = FMath::RInterpTo(CurrentRot, TargetInteractRotation, DeltaTime, 5.f);
+    SetActorRotation(SmoothRot);
+
+    if (CurrentRot.Equals(TargetInteractRotation, 5.f))
+    {
+      bIsRotatingToInteract = false;
+    }
+	}
 }
 
 // Called to bind functionality to input
@@ -154,6 +165,15 @@ void AVA_Character::StopJump()
 
 void AVA_Character::Interact()
 {
+	AActor* Candidate = InteractionComponent->GetBestCandidate();
+	if (Candidate)
+	{
+    FVector Direction = Candidate->GetActorLocation() - GetActorLocation();
+		Direction.Z = 0.f;
+    TargetInteractRotation = Direction.Rotation();
+    bIsRotatingToInteract = true;
+	}
+
   InteractionComponent->PrimaryInteract();
 }
 
