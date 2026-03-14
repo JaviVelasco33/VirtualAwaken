@@ -2,6 +2,7 @@
 
 
 #include "Characters/VA_BaseNPC.h"
+#include "Core/Dialogues/VA_DialogueManager.h"
 
 #pragma region INIT
 // Sets default values
@@ -52,7 +53,7 @@ FName AVA_BaseNPC::GetInteractionRowName_Implementation()
 
 void AVA_BaseNPC::OnInteract_Implementation(AActor* Interactor)
 {
-	if (DialogueLines.Num() == 0) return;
+  if (!DialogueAsset) return;
 
 	if (Interactor)
 	{
@@ -61,18 +62,18 @@ void AVA_BaseNPC::OnInteract_Implementation(AActor* Interactor)
 		TargetInteractRotation = Direction.Rotation();
 		bIsRotatingToInteract = true;
 	}
-
-
 	ShowNextLine();
 }
 
 void AVA_BaseNPC::ShowNextLine()
 {
-  FString DialogueStr = DialogueLines[CurrentDialogueIndex].ToString();
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, FString::Printf(TEXT("%s: %s"), *GetName(), *DialogueStr));
-
-	// Dialog cycle
-  CurrentDialogueIndex = (CurrentDialogueIndex + 1) % DialogueLines.Num();
+	if (DialogueAsset)
+	{
+    UVA_DialogueManager* DialogueManager = GetGameInstance()->GetSubsystem<UVA_DialogueManager>();
+		if (DialogueManager&& DialogueAsset)
+		{
+			DialogueManager->HandleDialogueInteraction(DialogueAsset);
+		}
+	}
 }
 

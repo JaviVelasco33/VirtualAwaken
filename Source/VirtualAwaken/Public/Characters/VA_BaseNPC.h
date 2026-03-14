@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Interfaces/VA_InteractableInterface.h"
 #include "Core/Types/VA_NPCType.h"
+#include "Core/Dialogues/VA_DialogueAsset.h"
 #include "VA_BaseNPC.generated.h"
 
 UCLASS()
@@ -38,7 +39,7 @@ protected:
 
 	// Dialogs system
   UPROPERTY(EditAnywhere, Category = "VA | Dialogue")
-  TArray<FText> DialogueLines;
+	UVA_DialogueAsset* DialogueAsset;
 
   int32 CurrentDialogueIndex = 0;
 #pragma endregion
