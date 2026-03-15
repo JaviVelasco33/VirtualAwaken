@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "VA_DialogueAsset.h"
+#include "Widgets/VA_DialogueWidget.h"
 #include "VA_DialogueManager.generated.h"
 
 /**
@@ -22,9 +23,21 @@ public:
   // Clear the current dialogue
 	void EndDialogue();
 
+  // Function for widget shows player's choices
+  UFUNCTION(BlueprintCallable, Category = "VA | Dialogue")
+  void SelectChoice(int32 ChoiceIndex);
+
+protected:
+	// Widget class
+  //UPROPERTY(EditAnywhere, Category = "VA | Dialogue")
+  //TSubclassOf<class UVA_DialogueWidget> DialogueWidgetClass;
+
 private:
 	UPROPERTY()
 	class UVA_DialogueAsset* CurrentAsset = nullptr;
+
+	UPROPERTY()
+  UVA_DialogueWidget* ActiveWidget = nullptr;
 
 	int32 CurrentIndex = -1;
 

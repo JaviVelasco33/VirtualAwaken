@@ -21,4 +21,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Dialogue")
   TArray<FVA_DialogueChoice> Choices;
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Dialogue")
+  FName CompletionFlag;
 };

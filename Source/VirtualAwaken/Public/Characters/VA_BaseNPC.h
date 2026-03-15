@@ -37,11 +37,22 @@ protected:
   UPROPERTY(EditDefaultsOnly, Category = "VA | Interaction")
 	FName InteractionRowName = FName("Talk");
 
+#pragma endregion
+
+#pragma region DIALOGUE
+protected:
 	// Dialogs system
   UPROPERTY(EditAnywhere, Category = "VA | Dialogue")
 	UVA_DialogueAsset* DialogueAsset;
 
+	// Array of shorts phrases that the NPC says when he don't want to talk
+  UPROPERTY(EditAnywhere, Category = "VA | Dialogue")
+  TArray<FText> AmbientBarks;
+
   int32 CurrentDialogueIndex = 0;
+
+	UFUNCTION()
+  void PlayAmbientBark();
 #pragma endregion
 
 #pragma region CONFIG

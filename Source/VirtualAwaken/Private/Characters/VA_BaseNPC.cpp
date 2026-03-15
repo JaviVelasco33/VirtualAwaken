@@ -3,6 +3,7 @@
 
 #include "Characters/VA_BaseNPC.h"
 #include "Core/Dialogues/VA_DialogueManager.h"
+#include "Core/VA_GameInstance.h"
 
 #pragma region INIT
 // Sets default values
@@ -53,8 +54,6 @@ FName AVA_BaseNPC::GetInteractionRowName_Implementation()
 
 void AVA_BaseNPC::OnInteract_Implementation(AActor* Interactor)
 {
-  if (!DialogueAsset) return;
-
 	if (Interactor)
 	{
 		FVector Direction = Interactor->GetActorLocation() - GetActorLocation();
@@ -62,18 +61,43 @@ void AVA_BaseNPC::OnInteract_Implementation(AActor* Interactor)
 		TargetInteractRotation = Direction.Rotation();
 		bIsRotatingToInteract = true;
 	}
+
 	ShowNextLine();
 }
 
 void AVA_BaseNPC::ShowNextLine()
 {
-	if (DialogueAsset)
+	UVA_GameInstance* GI = Cast<UVA_GameInstance>(GetGameInstance());
+
+	if (!GI || !DialogueAsset) return;
+
+  // Check if the dialogue is already completed, if so, play a random bark, else, start the dialogue
+  bool bDialogueCompleted = GI->GetNarrativeFlag(DialogueAsset->CompletionFlag);
+
+	if (bDialogueCompleted)
 	{
-    UVA_DialogueManager* DialogueManager = GetGameInstance()->GetSubsystem<UVA_DialogueManager>();
-		if (DialogueManager&& DialogueAsset)
-		{
-			DialogueManager->HandleDialogueInteraction(DialogueAsset);
-		}
+    // The principal dialogue is already completed, play a random bark
+		PlayAmbientBark();
+    return;
+	}
+	else
+	{
+    // The dialogue is not completed, start or advance the dialogue
+		UVA_DialogueManager* DialogueManager = GI->GetSubsystem<UVA_DialogueManager>();
+    if (DialogueManager) DialogueManager->HandleDialogueInteraction(DialogueAsset);
 	}
 }
 
+void AVA_BaseNPC::PlayAmbientBark()
+{
+  if (AmbientBarks.Num() == 0) return;
+
+	// Choose a random bark
+  int32 RandomIndex = FMath::RandRange(0, AmbientBarks.Num() - 1);
+  FText SelectedBark = AmbientBarks[RandomIndex];
+
+	if (GEngine)
+	{
+    GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Yellow, FString::Printf(TEXT("%s says: %s"), *GetName(), *SelectedBark.ToString()));
+	}
+}
