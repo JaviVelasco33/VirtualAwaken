@@ -16,6 +16,11 @@ class VIRTUALAWAKEN_API UVA_GameInstance : public UGameInstance
 	GENERATED_BODY()
 	
 public:
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | V-311 Data")
+  FText V311Name = FText::FromString("V-311");
+
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | V-311 Data")
+  UTexture2D* V311Portrait;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Narrative")
   TMap<FName, bool> NarrativeFlags;

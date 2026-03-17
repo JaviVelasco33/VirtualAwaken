@@ -6,6 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "VA_DialogueAsset.h"
 #include "Widgets/VA_DialogueWidget.h"
+#include "Characters/VA_BaseNPC.h"
 #include "VA_DialogueManager.generated.h"
 
 /**
@@ -18,7 +19,7 @@ class VIRTUALAWAKEN_API UVA_DialogueManager : public UGameInstanceSubsystem
 	
 public:
   // Starts or advance a dialogue
-  void HandleDialogueInteraction(class UVA_DialogueAsset* NewAsset);
+  void HandleDialogueInteraction(UVA_DialogueAsset* NewAsset, AVA_BaseNPC* InNPC);
 
   // Clear the current dialogue
 	void EndDialogue();
@@ -27,12 +28,11 @@ public:
   UFUNCTION(BlueprintCallable, Category = "VA | Dialogue")
   void SelectChoice(int32 ChoiceIndex);
 
-protected:
-	// Widget class
-  //UPROPERTY(EditAnywhere, Category = "VA | Dialogue")
-  //TSubclassOf<class UVA_DialogueWidget> DialogueWidgetClass;
 
 private:
+  UPROPERTY()
+  class AVA_BaseNPC* InteractedNPC;
+
 	UPROPERTY()
 	class UVA_DialogueAsset* CurrentAsset = nullptr;
 

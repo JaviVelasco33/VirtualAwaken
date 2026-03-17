@@ -95,4 +95,16 @@ protected:
 #pragma region ATTRIBUTES
 
 #pragma endregion
+
+#pragma region DIALOGUE
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Camera")
+	bool bInDialogueMode = false;
+
+	float OriginalArmLength;
+	FRotator OriginalRotation;
+
+public:
+	void SetDialogueCameraMode(bool bActive);
+#pragma endregion
 };

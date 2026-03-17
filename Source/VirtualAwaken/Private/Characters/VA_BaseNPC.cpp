@@ -84,7 +84,7 @@ void AVA_BaseNPC::ShowNextLine()
 	{
     // The dialogue is not completed, start or advance the dialogue
 		UVA_DialogueManager* DialogueManager = GI->GetSubsystem<UVA_DialogueManager>();
-    if (DialogueManager) DialogueManager->HandleDialogueInteraction(DialogueAsset);
+    if (DialogueManager) DialogueManager->HandleDialogueInteraction(DialogueAsset, this);
 	}
 }
 

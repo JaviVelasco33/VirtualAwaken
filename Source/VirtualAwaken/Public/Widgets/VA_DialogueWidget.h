@@ -20,6 +20,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
 	void OnUpdateDialogue(const FText& SpeakerName, const FText& DialogueText);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
+	void OnUpdateSpeaker(const EVA_SpeakerType& Speaker, const FText& SpeakerName, const UTexture2D* SpeakerPortrait);
+
   UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
 	void OnShowChoices(const TArray<FVA_DialogueChoice>& Choices);
 

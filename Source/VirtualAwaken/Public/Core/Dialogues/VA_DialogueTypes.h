@@ -5,13 +5,20 @@
 #include "CoreMinimal.h"
 #include "VA_DialogueTypes.generated.h"
 
+UENUM(BlueprintType)
+enum class EVA_SpeakerType :uint8
+{
+  NPC UMETA(DisplayName = "Current NPC"),
+  V311 UMETA(DisplayName = "V-311 (Prota)"),
+};
+
 USTRUCT(BlueprintType)
 struct FVA_DialogueLine
 {
   GENERATED_BODY()
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VA | Dialogue")
-  FText SpeakerName;
+  EVA_SpeakerType Speaker = EVA_SpeakerType::NPC;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VA | Dialogue")
   FText Text;

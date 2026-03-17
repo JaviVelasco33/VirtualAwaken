@@ -35,6 +35,10 @@ AVA_Character::AVA_Character()
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 400.f;
 	CameraBoom->bUsePawnControlRotation = true;
+	CameraBoom->bEnableCameraLag = true;
+	CameraBoom->bEnableCameraRotationLag = true;
+	CameraBoom->CameraLagSpeed = 15.0f;
+	CameraBoom->CameraRotationLagSpeed = 15.0f;
 
 	// Create the Camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -80,6 +84,7 @@ void AVA_Character::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Rotation when interact
 	if (bIsRotatingToInteract)
 	{
 		FRotator CurrentRot = GetActorRotation();
@@ -90,6 +95,27 @@ void AVA_Character::Tick(float DeltaTime)
     {
       bIsRotatingToInteract = false;
     }
+	}
+
+	// Camera orbit for dialogues
+	if (bInDialogueMode)
+	{
+		// Add a bit rotation for the orbit and adjust Pitch to look from a bit higher
+		APlayerController* PC = Cast<APlayerController>(GetController());
+		if (PC)
+		{
+			FRotator CurrentRot = PC->GetControlRotation();
+
+			float NewYaw = CurrentRot.Yaw + (10.f * DeltaTime);
+			float TargetPitch = -25.f;
+
+			FRotator TargetRot = FRotator(TargetPitch, CurrentRot.Yaw, 0.f);
+			FRotator NewRot = FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, 1.5f);
+
+			NewRot.Yaw = NewYaw;
+
+			PC->SetControlRotation(NewRot);
+		}
 	}
 }
 
@@ -175,6 +201,23 @@ void AVA_Character::Interact()
 	}
 
   InteractionComponent->PrimaryInteract();
+}
+
+void AVA_Character::SetDialogueCameraMode(bool bActive)
+{
+	bInDialogueMode = bActive;
+
+	if (bActive)
+	{
+		OriginalArmLength = CameraBoom->TargetArmLength;
+		OriginalRotation = GetControlRotation();
+
+		CameraBoom->TargetArmLength = 600.f;
+	}
+	else
+	{
+		CameraBoom->TargetArmLength = OriginalArmLength;
+	}
 }
 
 #pragma endregion

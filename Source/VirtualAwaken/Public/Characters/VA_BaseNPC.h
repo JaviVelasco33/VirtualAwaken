@@ -7,6 +7,7 @@
 #include "Interfaces/VA_InteractableInterface.h"
 #include "Core/Types/VA_NPCType.h"
 #include "Core/Dialogues/VA_DialogueAsset.h"
+#include "Engine/Texture2D.h"
 #include "VA_BaseNPC.generated.h"
 
 UCLASS()
@@ -41,6 +42,12 @@ protected:
 
 #pragma region DIALOGUE
 protected:
+  UPROPERTY(EditAnywhere, Category = "VA | Dialogue")
+  UTexture2D* NPCPortrait;
+
+  UPROPERTY(EditAnywhere, Category = "VA | Dialogue")
+  FText NPCName;
+
 	// Dialogs system
   UPROPERTY(EditAnywhere, Category = "VA | Dialogue")
 	UVA_DialogueAsset* DialogueAsset;
@@ -70,5 +77,14 @@ public:
 
 	bool bIsRotatingToInteract = false;
 	FRotator TargetInteractRotation;
+#pragma endregion
+
+#pragma region GETTERS
+public:
+	UFUNCTION(BlueprintCallable, Category = "VA | Dialogue")
+	UTexture2D* GetNPCPortrait() const { return NPCPortrait; }
+
+	UFUNCTION(BlueprintCallable, Category = "VA | Dialogue")
+  FText GetNPCName() const { return NPCName; }
 #pragma endregion
 };

@@ -4,9 +4,13 @@
 #include "Core/Dialogues/VA_DialogueManager.h"
 #include "Core/VA_GameInstance.h"
 #include "Widgets/VA_DialogueWidget.h"
+#include "Characters/VA_Character.h"
+#include "Framework/Application/SlateApplication.h"
 
-void UVA_DialogueManager::HandleDialogueInteraction(class UVA_DialogueAsset* NewAsset)
+void UVA_DialogueManager::HandleDialogueInteraction(UVA_DialogueAsset* NewAsset, AVA_BaseNPC* InNPC)
 {
+  InteractedNPC = InNPC;
+
   if (!NewAsset) return;
 
   // If the dialogue is new, start it from the beginning
@@ -29,10 +33,49 @@ void UVA_DialogueManager::HandleDialogueInteraction(class UVA_DialogueAsset* New
   }
 
   DisplayCurrentLine();
+
+  // Lock Char movement during the dialogue and activate the orbit camera
+  APlayerController* PC = GetWorld()->GetFirstPlayerController();
+  if (PC)
+  {
+    // Lock movement and cam rotation
+    PC->SetIgnoreMoveInput(true);
+    PC->SetIgnoreLookInput(true);
+
+    FInputModeGameAndUI InputMode;
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    InputMode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(InputMode);
+    PC->bShowMouseCursor = true;
+
+    AVA_Character* Player = Cast<AVA_Character>(PC->GetPawn());
+    if (Player) Player->SetDialogueCameraMode(true);
+  }
+
+
 }
 
 void UVA_DialogueManager::EndDialogue()
 {
+  AVA_Character* Player = Cast<AVA_Character>(GetWorld()->GetFirstPlayerController()->GetPawn());
+  if (Player) Player->SetDialogueCameraMode(false);
+
+  // Restore camera default controls
+  APlayerController* PC = GetWorld()->GetFirstPlayerController();
+  if (PC)
+  {
+    // Unlock movement and cam rotation
+    PC->ResetIgnoreMoveInput();
+    PC->ResetIgnoreLookInput();
+
+    FInputModeGameAndUI InputMode;
+    PC->SetInputMode(InputMode);
+    PC->bShowMouseCursor = false;
+
+    // Force the focus back to viewport
+    PC->Activate(true);
+  }
+
   if (ActiveWidget)
   {
     ActiveWidget->RemoveFromParent();
@@ -55,12 +98,12 @@ void UVA_DialogueManager::EndDialogue()
 
   CurrentAsset = nullptr;
   CurrentIndex = -1;
+
+  //bIsDialogueActive = false;
 }
 
 void UVA_DialogueManager::DisplayCurrentLine()
 {
-  if (!CurrentAsset || !CurrentAsset->Lines.IsValidIndex(CurrentIndex)) return;
-
   if (!ActiveWidget)
   {
     UVA_GameInstance* GI = Cast<UVA_GameInstance>(GetGameInstance());
@@ -70,40 +113,37 @@ void UVA_DialogueManager::DisplayCurrentLine()
       if (ActiveWidget)
       {
         ActiveWidget->AddToViewport();
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Widget de diálogo creado y añadido al Viewport."));
         ActiveWidget->SetVisibility(ESlateVisibility::Visible);
       }
-      else
-      {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("Fallo crítico al crear la instancia del Widget."));
-
-      }
-    }
-    else
-    {
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, TEXT("DialogueWidgetClass es NULL en el GameInstance. ¿Lo has asignado en el BP?"));
     }
   }
 
-  if (ActiveWidget)
+  if (!CurrentAsset || !CurrentAsset->Lines.IsValidIndex(CurrentIndex) || !ActiveWidget) return;
+
+  const FVA_DialogueLine& Line = CurrentAsset->Lines[CurrentIndex];
+
+  FText DisplayName;
+  UTexture2D* DisplayPortrait = nullptr;
+
+  // Choose what data send according to DataAsset Enum
+  if (Line.Speaker == EVA_SpeakerType::NPC && InteractedNPC)
   {
-    const FVA_DialogueLine& Line = CurrentAsset->Lines[CurrentIndex];
-
-    ActiveWidget->OnUpdateDialogue(Line.SpeakerName, Line.Text);
-
-  /*  if ((CurrentIndex == CurrentAsset->Lines.Num() - 1) && (CurrentAsset->Choices.Num() > 0))
-    {
-      ActiveWidget->OnShowChoices(CurrentAsset->Choices);
-    }*/
-    //// Format the message on Debug
-    //FString DebugMessage = FString::Printf(TEXT("[%s]: %s"), *Line.SpeakerName.ToString(), *Line.Text.ToString());
-
-    //// Display the dialogue line on Debug
-    //if (GEngine)
-    //{
-    //  GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Cyan, DebugMessage);
-    //}
+    DisplayName = InteractedNPC->GetNPCName();
+    DisplayPortrait = InteractedNPC->GetNPCPortrait();
   }
+  else
+  {
+    UVA_GameInstance* GI = Cast<UVA_GameInstance>(GetGameInstance());
+    if (GI)
+    {
+      DisplayName = GI->V311Name;
+      DisplayPortrait = GI->V311Portrait;
+    }
+  }
+
+  // Send all to the main widget
+  ActiveWidget->OnUpdateDialogue(DisplayName, Line.Text);
+  ActiveWidget->OnUpdateSpeaker(Line.Speaker, DisplayName, DisplayPortrait);
 }
 
 void UVA_DialogueManager::SelectChoice(int32 ChoiceIndex)
