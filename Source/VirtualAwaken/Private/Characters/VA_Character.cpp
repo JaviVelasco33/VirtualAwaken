@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interfaces/VA_InteractableInterface.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Core/Dialogues/VA_DialogueManager.h"
 
 #pragma region CONSTRUCTOR
 // Sets default values
@@ -33,7 +34,8 @@ AVA_Character::AVA_Character()
 	// Create the SpringArm
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 400.f;
+	CameraBoom->TargetArmLength = 350.f;
+	CameraBoom->TargetOffset = FVector(0.f, 0.f, 70.f);
 	CameraBoom->bUsePawnControlRotation = true;
 	CameraBoom->bEnableCameraLag = true;
 	CameraBoom->bEnableCameraRotationLag = true;
@@ -68,9 +70,11 @@ AVA_Character::AVA_Character()
 void AVA_Character::BeginPlay()
 {
 	Super::BeginPlay();
+
+	PlayerController = Cast<APlayerController>(Controller);
 	
 	// Add the Mapping context on init
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	if (PlayerController)
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem <UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -101,10 +105,9 @@ void AVA_Character::Tick(float DeltaTime)
 	if (bInDialogueMode)
 	{
 		// Add a bit rotation for the orbit and adjust Pitch to look from a bit higher
-		APlayerController* PC = Cast<APlayerController>(GetController());
-		if (PC)
+		if (PlayerController)
 		{
-			FRotator CurrentRot = PC->GetControlRotation();
+			FRotator CurrentRot = PlayerController->GetControlRotation();
 
 			float NewYaw = CurrentRot.Yaw + (10.f * DeltaTime);
 			float TargetPitch = -25.f;
@@ -114,8 +117,13 @@ void AVA_Character::Tick(float DeltaTime)
 
 			NewRot.Yaw = NewYaw;
 
-			PC->SetControlRotation(NewRot);
+			PlayerController->SetControlRotation(NewRot);
 		}
+
+		float CurrentArm = CameraBoom->TargetArmLength;
+		float TargetArm = 600.f;
+
+		CameraBoom->TargetArmLength = FMath::FInterpTo(CurrentArm, TargetArm, DeltaTime, 2.0f);
 	}
 }
 
@@ -191,16 +199,26 @@ void AVA_Character::StopJump()
 
 void AVA_Character::Interact()
 {
-	AActor* Candidate = InteractionComponent->GetBestCandidate();
-	if (Candidate)
+	UVA_DialogueManager* DM = GetGameInstance()->GetSubsystem<UVA_DialogueManager>();
+	if (DM && DM->IsDialogueActive())
 	{
-    FVector Direction = Candidate->GetActorLocation() - GetActorLocation();
-		Direction.Z = 0.f;
-    TargetInteractRotation = Direction.Rotation();
-    bIsRotatingToInteract = true;
+		DM->NextStep();
+		return;
 	}
 
-  InteractionComponent->PrimaryInteract();
+	if (InteractionComponent)
+	{
+    AActor* Candidate = InteractionComponent->GetBestCandidate();
+    if (Candidate)
+    {
+      FVector Direction = Candidate->GetActorLocation() - GetActorLocation();
+      Direction.Z = 0.f;
+      TargetInteractRotation = Direction.Rotation();
+      bIsRotatingToInteract = true;
+    }
+
+    InteractionComponent->PrimaryInteract();
+	}
 }
 
 void AVA_Character::SetDialogueCameraMode(bool bActive)
@@ -210,13 +228,12 @@ void AVA_Character::SetDialogueCameraMode(bool bActive)
 	if (bActive)
 	{
 		OriginalArmLength = CameraBoom->TargetArmLength;
-		OriginalRotation = GetControlRotation();
-
-		CameraBoom->TargetArmLength = 600.f;
+		OriginalRotation = PlayerController->GetControlRotation();
 	}
 	else
 	{
 		CameraBoom->TargetArmLength = OriginalArmLength;
+		PlayerController->SetControlRotation(OriginalRotation);
 	}
 }
 

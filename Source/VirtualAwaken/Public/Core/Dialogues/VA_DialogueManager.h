@@ -28,6 +28,12 @@ public:
   UFUNCTION(BlueprintCallable, Category = "VA | Dialogue")
   void SelectChoice(int32 ChoiceIndex);
 
+  void StartDialogue();
+
+  bool IsDialogueActive() const { return bIsDialogueActive;  }
+
+  void NextStep();
+
 
 private:
   UPROPERTY()
@@ -42,4 +48,6 @@ private:
 	int32 CurrentIndex = -1;
 
   void DisplayCurrentLine();
+
+  bool bIsDialogueActive = false;
 };

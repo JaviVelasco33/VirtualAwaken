@@ -17,42 +17,12 @@ void UVA_DialogueManager::HandleDialogueInteraction(UVA_DialogueAsset* NewAsset,
   if (CurrentAsset != NewAsset)
   {
     CurrentAsset = NewAsset;
-    CurrentIndex = 0;
+    StartDialogue();
   }
   else
   {
-    // If the dialogue is the same, advance to the next line
-    CurrentIndex++;
+    NextStep();
   }
-
-  // Check if we have reached the end of the dialogue
-  if (CurrentIndex >= CurrentAsset->Lines.Num())
-  {
-    EndDialogue();
-    return;
-  }
-
-  DisplayCurrentLine();
-
-  // Lock Char movement during the dialogue and activate the orbit camera
-  APlayerController* PC = GetWorld()->GetFirstPlayerController();
-  if (PC)
-  {
-    // Lock movement and cam rotation
-    PC->SetIgnoreMoveInput(true);
-    PC->SetIgnoreLookInput(true);
-
-    FInputModeGameAndUI InputMode;
-    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    InputMode.SetHideCursorDuringCapture(false);
-    PC->SetInputMode(InputMode);
-    PC->bShowMouseCursor = true;
-
-    AVA_Character* Player = Cast<AVA_Character>(PC->GetPawn());
-    if (Player) Player->SetDialogueCameraMode(true);
-  }
-
-
 }
 
 void UVA_DialogueManager::EndDialogue()
@@ -73,7 +43,7 @@ void UVA_DialogueManager::EndDialogue()
     PC->bShowMouseCursor = false;
 
     // Force the focus back to viewport
-    PC->Activate(true);
+    PC->SetInputMode(FInputModeGameOnly());
   }
 
   if (ActiveWidget)
@@ -99,7 +69,7 @@ void UVA_DialogueManager::EndDialogue()
   CurrentAsset = nullptr;
   CurrentIndex = -1;
 
-  //bIsDialogueActive = false;
+  bIsDialogueActive = false;
 }
 
 void UVA_DialogueManager::DisplayCurrentLine()
@@ -176,4 +146,48 @@ void UVA_DialogueManager::SelectChoice(int32 ChoiceIndex)
   {
     EndDialogue();
   }
+}
+
+void UVA_DialogueManager::StartDialogue()
+{
+  CurrentIndex = 0;
+  bIsDialogueActive = true;
+
+  // Lock Char movement during the dialogue and activate the orbit camera
+  APlayerController* PC = GetWorld()->GetFirstPlayerController();
+  if (PC)
+  {
+    // Lock movement and cam rotation
+    PC->SetIgnoreMoveInput(true);
+    PC->SetIgnoreLookInput(true);
+
+    FInputModeGameAndUI InputMode;
+    InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+    InputMode.SetHideCursorDuringCapture(false);
+    PC->SetInputMode(InputMode);
+    PC->bShowMouseCursor = true;
+
+    AVA_Character* Player = Cast<AVA_Character>(PC->GetPawn());
+    if (Player) Player->SetDialogueCameraMode(true);
+  }
+
+  DisplayCurrentLine();
+}
+
+void UVA_DialogueManager::NextStep()
+{
+  // If there are options, not advance with E
+  if (CurrentIndex == CurrentAsset->Lines.Num() - 1 && CurrentAsset->Choices.Num() > 0) return;
+
+  // If the dialogue is the same, advance to the next line
+  CurrentIndex++;
+
+  // Check if we have reached the end of the dialogue
+  if (CurrentIndex >= CurrentAsset->Lines.Num())
+  {
+    EndDialogue();
+    return;
+  }
+
+  DisplayCurrentLine();
 }

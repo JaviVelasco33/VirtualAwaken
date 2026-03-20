@@ -31,7 +31,7 @@ public:
 protected:
   // Radius for searching interactable actors around the player.
   UPROPERTY(EditAnywhere, Category = "VA | Interaction")
-	float SearchRadius = 300.0f;
+	float SearchRadius = 150.0f;
 
   // Weight of the importance: how much influence the angle against the distance
   UPROPERTY(EditAnywhere, Category = "VA | Interaction")

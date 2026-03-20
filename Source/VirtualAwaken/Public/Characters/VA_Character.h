@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "Core/VA_InteractionSettings.h"
+#include "Engine/TimerHandle.h"
 #include "VA_Character.generated.h"
 
 UCLASS()
@@ -81,6 +82,7 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 	void StartJump();
+
 	void StopJump();
 #pragma endregion
 
@@ -97,6 +99,9 @@ protected:
 #pragma endregion
 
 #pragma region DIALOGUE
+public:
+	void SetDialogueCameraMode(bool bActive);
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Camera")
 	bool bInDialogueMode = false;
@@ -104,7 +109,9 @@ protected:
 	float OriginalArmLength;
 	FRotator OriginalRotation;
 
-public:
-	void SetDialogueCameraMode(bool bActive);
+private:
+	UPROPERTY()
+	APlayerController* PlayerController;
+
 #pragma endregion
 };

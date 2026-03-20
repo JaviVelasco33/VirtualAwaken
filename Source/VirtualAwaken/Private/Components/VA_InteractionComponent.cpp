@@ -6,6 +6,7 @@
 #include "Widgets/VA_HUD.h"
 #include "Engine/OverlapResult.h"
 #include "Environment/VA_MovingActor.h"
+#include "Core/Dialogues/VA_DialogueManager.h"
 
 #pragma region INIT
 // Sets default values for this component's properties
@@ -64,6 +65,12 @@ void UVA_InteractionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 TObjectPtr<AActor> UVA_InteractionComponent::FindBestCandidate()
 {
+	UVA_DialogueManager* DM = GetWorld()->GetGameInstance()->GetSubsystem<UVA_DialogueManager>();
+	if (DM && DM->IsDialogueActive())
+	{
+		return BestCandidate = nullptr;
+	}
+
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 	if (!PC && !PC->GetPawn()) return nullptr;
 
