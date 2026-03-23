@@ -28,4 +28,7 @@ public:
 
   UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
   void OnDialogueFinished();
+
+	  UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
+  void ClearChoices();
 };

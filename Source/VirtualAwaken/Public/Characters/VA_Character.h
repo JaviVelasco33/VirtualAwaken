@@ -7,7 +7,10 @@
 #include "InputActionValue.h"
 #include "Core/VA_InteractionSettings.h"
 #include "Engine/TimerHandle.h"
+#include "Core/Types/VA_V311Phase.h"
 #include "VA_Character.generated.h"
+
+class AVA_Companion;
 
 UCLASS()
 class VIRTUALAWAKEN_API AVA_Character : public ACharacter
@@ -57,33 +60,102 @@ protected:
 #pragma endregion
 
 #pragma region INPUT ASSETS
-  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input")
+	// Context
+  UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputMappingContext> DefaultMappingContext;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input")
+	//Movement
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> MoveAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input")
+	// Camera
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> LookAction;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input")
+	// Jump
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> JumpAction;
 
-	// Interact Action
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input")
+	// Interaction
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<class UInputAction> InteractAction;
+
+	//Attack
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> AttackAction;
+
+	// Dash
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> DashAction;
+
+	// Scanner
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> ScannerAction;
+
+	// Gadget
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> GadgetAction;
+
+	//Aim
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> AimAction;
+
+	// Shoot
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> ShootAction;
+
+	// Lock On
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> LockOnAction;
+
+	// Sprint
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> SprintAction;
+
+	// Orders
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> Order1Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> Order2Action;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> Order3Action;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> Order4Action;
+
+	// Map
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> MapAction;
+
+	// Pause
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<class UInputAction> PauseAction;
 #pragma endregion
 
 #pragma region INPUT CALLBACKS
 	// Call for movement input
 	void Move(const FInputActionValue& Value);
+	void StopSprintOnMoveEnd();
 
 	// Call for mouse or right stick input
 	void Look(const FInputActionValue& Value);
-
 	void StartJump();
-
 	void StopJump();
+	void Attack();
+	void Dash();
+	void Scanner();
+	void Gadget();
+	void AimStart();
+	void AimEnd();
+	void Shoot();
+	void LockOn();
+	void ToggleSprint();
+	void CompanionOrders(const struct FInputActionInstance& Instance);
+	void ShowMap();
+	void PauseGame();
+
 #pragma endregion
 
 #pragma region INTERACTION SETTINGS
@@ -95,7 +167,8 @@ protected:
 #pragma endregion
 
 #pragma region ATTRIBUTES
-
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VA | Phases")
+		EVA_Phase CurrentPhase = EVA_Phase::Phase1;
 #pragma endregion
 
 #pragma region DIALOGUE
@@ -113,5 +186,27 @@ private:
 	UPROPERTY()
 	APlayerController* PlayerController;
 
+	// Movement Speed
+	float WalkSpeed;
+	float SprintSpeed;
+
+#pragma endregion
+
+#pragma region SNEAK
+public:
+	// Function to zones advise the player
+	UFUNCTION(BlueprintCallable)
+	void SetInsideHiddingZone(bool bEntered);
+	
+	// How many sneaking zones are covering right now
+	int32 HidingZonesCount = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "VA | Sneak")
+	bool bIsHidden = false;
+#pragma endregion
+
+#pragma region COMPANION
+	UPROPERTY(EditAnywhere, Category = "VA | Companion")
+	TObjectPtr<AVA_Companion> ActiveCompanion;
 #pragma endregion
 };

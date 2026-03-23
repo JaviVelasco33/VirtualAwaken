@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -46,4 +46,18 @@ struct FVA_DialogueChoice
   // To what index this choice will be redirected
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VA | Dialogue")
   int32 DestinationIndex = -1;
+};
+
+USTRUCT(BlueprintType)
+struct FVA_ChoicePoint
+{
+  GENERATED_BODY()
+
+  // At which line of the dialogue should appear this choices
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VA | Dialogue")
+  int32 TriggerLineIndex = -1;
+
+  // possible answers for that specific moment
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TArray<FVA_DialogueChoice> Choices;
 };

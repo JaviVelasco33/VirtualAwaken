@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -20,7 +20,7 @@ public:
 	TArray<FVA_DialogueLine> Lines;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Dialogue")
-  TArray<FVA_DialogueChoice> Choices;
+  TArray<FVA_ChoicePoint> ChoicePoint;
 
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Dialogue")
   FName CompletionFlag;
