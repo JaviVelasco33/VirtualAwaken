@@ -57,6 +57,8 @@ protected:
 	// Getters for components
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+	FORCEINLINE class AVA_Companion* GetCompanion() const { return ActiveCompanion; }
+
 #pragma endregion
 
 #pragma region INPUT ASSETS
@@ -206,7 +208,12 @@ public:
 #pragma endregion
 
 #pragma region COMPANION
-	UPROPERTY(EditAnywhere, Category = "VA | Companion")
+	// Pointer that will save the companion
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Companion")
 	TObjectPtr<AVA_Companion> ActiveCompanion;
+
+	// Search and attach companion
+	UFUNCTION(BlueprintCallable, Category = "VA | Companion")
+	void AttachCompanion();
 #pragma endregion
 };

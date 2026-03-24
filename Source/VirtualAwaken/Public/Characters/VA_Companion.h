@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/SphereComponent.h"
 #include "VA_Companion.generated.h"
 
 class AVA_Character;
@@ -24,6 +25,15 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+#pragma endregion
+
+#pragma region COMPONENTS
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Companion", meta=(AllowPrivateAccess = "true"))
+	TObjectPtr<class USphereComponent> SphereComponent;
+
+	/** The main skeletal mesh associated with this Character (optional sub-object). */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Companion", meta=(AllowPrivateAccess = "true"))
+	TObjectPtr<class UStaticMeshComponent> Mesh;
 #pragma endregion
 
 #pragma region CHARACTER

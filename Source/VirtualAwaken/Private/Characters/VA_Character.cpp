@@ -14,6 +14,7 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Core/Dialogues/VA_DialogueManager.h"
 #include "Characters/VA_Companion.h"
+#include "Kismet/GameplayStatics.h"
 
 #pragma region CONSTRUCTOR
 // Sets default values
@@ -85,17 +86,6 @@ void AVA_Character::BeginPlay()
 		{
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
-	}
-
-	// Companion settings
-	if (ActiveCompanion)
-	{
-		ActiveCompanion->OwnerCharacter = this;
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("C0M-P4 Vinculado correctamente"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("ADVERTENCIA: No se ha asignado compañero en el Picker"));
 	}
 }
 
@@ -205,7 +195,7 @@ void AVA_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 }
 #pragma endregion
 
-#pragma region MOVEMENT
+#pragma region INPUT CALLBACKS
 void AVA_Character::Move(const FInputActionValue& Value)
 {
 	if (bInDialogueMode) return;
@@ -454,7 +444,9 @@ void AVA_Character::Interact()
     InteractionComponent->PrimaryInteract();
 	}
 }
+#pragma endregion
 
+#pragma region DIALOGUE
 void AVA_Character::SetDialogueCameraMode(bool bActive)
 {
 	bInDialogueMode = bActive;
@@ -470,7 +462,9 @@ void AVA_Character::SetDialogueCameraMode(bool bActive)
 		PlayerController->SetControlRotation(OriginalRotation);
 	}
 }
+#pragma endregion
 
+#pragma region SNEAK
 void AVA_Character::SetInsideHiddingZone(bool bEntered)
 {
 	if (bEntered) HidingZonesCount++;
@@ -486,5 +480,33 @@ void AVA_Character::SetInsideHiddingZone(bool bEntered)
 		//OnSneakStateChanged(bIsHidden);
 	}
 }
+#pragma endregion
 
+#pragma region COMPANION
+void AVA_Character::AttachCompanion()
+{
+	TArray<AActor*> FoundCompanions;
+
+	// Search all actors of class Companion at the level
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AVA_Companion::StaticClass(), FoundCompanions);
+
+	// If there is one at least, link it
+	if (FoundCompanions.Num() > 0)
+	{
+		ActiveCompanion = Cast<AVA_Companion>(FoundCompanions[0]);
+
+		if (ActiveCompanion)
+		{
+			ActiveCompanion->OwnerCharacter = this;
+			ActiveCompanion->SetActorHiddenInGame(false);
+			ActiveCompanion->SetActorTickEnabled(true);
+
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("C0M-P4 adquirido y sistemas en línea."));
+		}
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Error: No se ha encontrado ningún C0M-P4 en este nivel."));
+	}
+}
 #pragma endregion
