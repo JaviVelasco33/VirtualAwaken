@@ -11,7 +11,7 @@ UVA_AttributeComponent::UVA_AttributeComponent()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
 
-	Health = MaxHealth;
+	CurrentHealth = MaxHealth;
 }
 
 // Called when the game starts
@@ -19,7 +19,6 @@ void UVA_AttributeComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Health = MaxHealth;	
 }
 
 // Called every frame
@@ -38,12 +37,12 @@ bool UVA_AttributeComponent::ApplyHealthChange(float Delta, AActor* Instigator)
 	if (!IsAlive() && Delta < 0.0f) return false;
 
 	float OldHealth = Delta;
-	Health = FMath::Clamp(Health + Delta, 0.0f, MaxHealth);
+	CurrentHealth = FMath::Clamp(CurrentHealth + Delta, 0.0f, MaxHealth);
 
 	// if there's a real change
-	if (Health != OldHealth)
+	if (CurrentHealth != OldHealth)
 	{
-		OnHealthChanged.Broadcast(Health, MaxHealth, Instigator);
+		OnHealthChanged.Broadcast(CurrentHealth, MaxHealth, Instigator);
 		return true;
 	}
 

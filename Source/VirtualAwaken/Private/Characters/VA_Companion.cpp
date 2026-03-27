@@ -3,6 +3,8 @@
 
 #include "Characters/VA_Companion.h"
 #include "Characters/VA_Character.h"
+#include "Components/VA_AttributeComponent.h"
+#include "Environment/VA_GasCloud.h"
 
 #pragma region INIT
 // Sets default values
@@ -67,7 +69,7 @@ void AVA_Companion::Tick(float DeltaTime)
 		FVector MoveDir = TargetLoc - CurrentLoc;
 
 		// Check if it is moving (with tolerance)
-		if (MoveDir.SizeSquared() > 100.f)
+		if (MoveDir.SizeSquared() > 50000.f)
 		{
 			// Look forward direction
 			TargetRot = MoveDir.Rotation();
@@ -78,18 +80,83 @@ void AVA_Companion::Tick(float DeltaTime)
 			TargetRot = OwnerCharacter->GetActorRotation();
 		}
 		// Apply smooth rotation
-		SetActorRotation(FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, FollowSpeed * 1.5f));
+		SetActorRotation(FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, FollowSpeed / 2.f));
 	}
 
 }
 #pragma endregion
 
+#pragma region ABILITIES
 void AVA_Companion::ExecuteScan()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("C0M-P4: Escaneando área..."));
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("C0M-P4: Scanning area..."));
 }
 
-void AVA_Companion::ExecuteOrder(int32 OrderID)
+void AVA_Companion::StartGasProtocol()
 {
+	if (!OwnerCharacter || !GasCloudClass) return;
 
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	// Get the player location
+	FVector SpawnLoc = OwnerCharacter->GetActorLocation();
+
+	// Adjust the height to be at the floor
+	SpawnLoc.Z -= 90.f;
+
+	// Spawn the BP_GasCloud
+	GetWorld()->SpawnActor<AVA_GasCloud>(GasCloudClass, SpawnLoc, FRotator::ZeroRotator, SpawnParams);
+
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("C0M-P4: Hiding protocol activated."));
 }
+
+void AVA_Companion::StartRepairProtocol()
+{
+	if (!OwnerCharacter || RemainingRepairTicks > 0) return;
+
+	AttrComp = OwnerCharacter->FindComponentByClass<UVA_AttributeComponent>();
+
+	if (AttrComp && AttrComp->GetCurrentHealth() < AttrComp->GetMaxHealth())
+	{
+		RemainingRepairTicks = 5;
+
+		GetWorldTimerManager().SetTimer(RepairTH, this, &AVA_Companion::ApplyRepairTick, 1.0f, true);
+
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("C0M-P4: Starting repair..."));
+	}
+}
+
+void AVA_Companion::CancelRepair()
+{
+	RemainingRepairTicks = 0;
+	GetWorldTimerManager().ClearTimer(RepairTH);
+}
+
+void AVA_Companion::ApplyRepairTick()
+{
+	if (OwnerCharacter && RemainingRepairTicks > 0)
+	{
+		AttrComp = OwnerCharacter->FindComponentByClass<UVA_AttributeComponent>();
+		if (AttrComp)
+		{
+			// Add health to player component
+			AttrComp->ApplyHealthChange(HealthPerTick, this);
+
+			RemainingRepairTicks--;
+
+			// If max health is reach or the ticks is ended, stop it
+			if (RemainingRepairTicks <= 0 || AttrComp->GetCurrentHealth() >= AttrComp->GetMaxHealth())
+			{
+				CancelRepair();
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("C0M-P4: Repair completed."));
+			}
+		}
+	}
+	else
+	{
+		CancelRepair();
+	}
+}
+
+#pragma endregion

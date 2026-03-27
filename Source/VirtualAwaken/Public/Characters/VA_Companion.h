@@ -8,6 +8,7 @@
 #include "VA_Companion.generated.h"
 
 class AVA_Character;
+class AVA_GasCloud;
 
 UCLASS()
 class VIRTUALAWAKEN_API AVA_Companion : public AActor
@@ -49,11 +50,44 @@ public:
 	// Follow speed
 	UPROPERTY(EditAnywhere, Category = "VA | Companion")
 	float	FollowSpeed = 5.f;
+
+	// Attribute componente (Player)
+	UPROPERTY(BlueprintReadWrite, Category = "VA | Companion")
+	TObjectPtr<class UVA_AttributeComponent> AttrComp;
 #pragma endregion
 
-#pragma region GAMEPLAY
+#pragma region ABILITIES
 public:
+	// GasCloud class
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "VA | Orders | Order 2")
+	TSubclassOf<AVA_GasCloud> GasCloudClass;
+
+	// Activate Scan
 	void ExecuteScan();
-	void ExecuteOrder(int32 OrderID);
+
+	// Start hiding - Order 2
+	void StartGasProtocol();
+
+	// Start healing - Order 3
+	void StartRepairProtocol();
+
+	// To cancel the repair if player take damage
+	void CancelRepair();
+
+protected:
+
+	// Timer for reparation
+	FTimerHandle RepairTH;
+
+	// How many times apply the health (ticks)
+	int32 RemainingRepairTicks = 0;
+
+	// Health amount per sec
+	UPROPERTY(EditAnywhere, Category = "VA | Abilities")
+	float HealthPerTick = 10.f;
+
+	// Internal function to apply health
+	void ApplyRepairTick();
+
 #pragma endregion
 };

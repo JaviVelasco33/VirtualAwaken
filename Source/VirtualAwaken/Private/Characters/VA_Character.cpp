@@ -376,17 +376,25 @@ void AVA_Character::CompanionOrders(const FInputActionInstance& Instance)
 
 	if (TriggeredAction == Order2Action)
 	{
-		if (GEngine)
+		if (ActiveCompanion)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_2")));
+			ActiveCompanion->StartGasProtocol();
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_2")));
+			}
 		}
 	}
 
 	if (TriggeredAction == Order3Action)
 	{
-		if (GEngine)
+		if (ActiveCompanion)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_3")));
+			ActiveCompanion->StartRepairProtocol();
+      if (GEngine)
+      {
+        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_3")));
+      }
 		}
 	}
 
@@ -479,6 +487,15 @@ void AVA_Character::SetInsideHiddingZone(bool bEntered)
 	{
 		//OnSneakStateChanged(bIsHidden);
 	}
+
+	if (bEntered)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Hide")));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Show")));
+	}
 }
 #pragma endregion
 
@@ -501,12 +518,12 @@ void AVA_Character::AttachCompanion()
 			ActiveCompanion->SetActorHiddenInGame(false);
 			ActiveCompanion->SetActorTickEnabled(true);
 
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("C0M-P4 adquirido y sistemas en línea."));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("C0M-P4 added and systems activated."));
 		}
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Error: No se ha encontrado ningún C0M-P4 en este nivel."));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Error: Doesn't found any C0M-P4 in this level."));
 	}
 }
 #pragma endregion

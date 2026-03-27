@@ -31,7 +31,7 @@ public:
 #pragma region MAIN ATTRIBUTES
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
-	float Health;
+	float CurrentHealth;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Attributes")
 	float MaxHealth = 100.f;
@@ -49,9 +49,13 @@ public:
 	bool ApplyHealthChange(float Delta, AActor* Instigator);
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
-	bool IsAlive() const { return Health > 0.0f; }
+	bool IsAlive() const { return CurrentHealth > 0.0f; }
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
-	float GetHealth() const { return Health; }
+	float GetCurrentHealth() const { return CurrentHealth; }
+
+		UFUNCTION(BlueprintCallable, Category = "Attributes")
+	float GetMaxHealth() const { return MaxHealth; }
+
 #pragma endregion
 };
