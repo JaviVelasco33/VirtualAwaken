@@ -160,7 +160,7 @@ protected:
 
 #pragma endregion
 
-#pragma region INTERACTION SETTINGS
+#pragma region INTERACTION
 		// Function called by the Input
 		void Interact();
 
@@ -169,8 +169,19 @@ protected:
 #pragma endregion
 
 #pragma region ATTRIBUTES
+public:
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "VA | Phases")
 		EVA_Phase CurrentPhase = EVA_Phase::Phase1;
+
+		UFUNCTION(BlueprintCallable)
+		void CheckPhases();
+
+		UFUNCTION(BlueprintCallable)
+		void SetupAttributes();
+
+protected:
+	float SpeedMultiplier = 1.0f;
+
 #pragma endregion
 
 #pragma region DIALOGUE

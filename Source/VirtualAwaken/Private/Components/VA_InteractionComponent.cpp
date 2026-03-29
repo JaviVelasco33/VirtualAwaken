@@ -176,6 +176,10 @@ void UVA_InteractionComponent::UpdateHUD(AVA_HUD* HUD)
 
 		HUD->UpdateInteractionWidget(BestCandidate, Data);
 	}
+	else
+	{
+		BestCandidate = nullptr;
+	}
 }
 
 #pragma endregion

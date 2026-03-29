@@ -2,7 +2,7 @@
 
 
 #include "Core/VA_GameModeBase.h"
-#include "Characters/VA_Character.h"
+#include "Character/VA_Character.h"
 
 #pragma region CONSTRUCTOR
 AVA_GameModeBase::AVA_GameModeBase()

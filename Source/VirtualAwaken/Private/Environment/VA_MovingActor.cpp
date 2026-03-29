@@ -2,7 +2,7 @@
 
 
 #include "Environment/VA_MovingActor.h"
-#include "Characters/VA_Character.h"
+#include "Character/VA_Character.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 

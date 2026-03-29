@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/VA_BaseNPC.h"
+#include "NPCs/VA_BaseNPC.h"
 #include "Core/Dialogues/VA_DialogueManager.h"
 #include "Core/VA_GameInstance.h"
 
@@ -11,6 +11,11 @@ AVA_BaseNPC::AVA_BaseNPC()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+
+	GetMesh()->SetCollisionProfileName(TEXT("OverlapAll"));
+
+	// ------ Attribute Component ------
+	AttributeComp = CreateDefaultSubobject<UVA_AttributeComponent>(TEXT("AttributeAcomponent"));
 
 }
 

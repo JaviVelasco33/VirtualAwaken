@@ -8,6 +8,7 @@
 #include "Core/Types/VA_NPCType.h"
 #include "Core/Dialogues/VA_DialogueAsset.h"
 #include "Engine/Texture2D.h"
+#include "Components/VA_AttributeComponent.h"
 #include "VA_BaseNPC.generated.h"
 
 UCLASS()
@@ -60,6 +61,11 @@ protected:
 
 	UFUNCTION()
   void PlayAmbientBark();
+#pragma endregion
+
+#pragma region ATTRIBUTES
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Attributes")
+	TObjectPtr<class UVA_AttributeComponent> AttributeComp;
 #pragma endregion
 
 #pragma region CONFIG

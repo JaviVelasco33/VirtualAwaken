@@ -5,7 +5,7 @@
 #include "Components/VA_SwitchComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
-#include "Characters/VA_Character.h"
+#include "Character/VA_Character.h"
 
 #pragma region INIT
 // Sets default values

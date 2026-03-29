@@ -1,8 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/VA_Companion.h"
-#include "Characters/VA_Character.h"
+#include "NPCs/VA_Companion.h"
+#include "Character/VA_Character.h"
 #include "Components/VA_AttributeComponent.h"
 #include "Environment/VA_GasCloud.h"
 
@@ -89,7 +89,50 @@ void AVA_Companion::Tick(float DeltaTime)
 #pragma region ABILITIES
 void AVA_Companion::ExecuteScan()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("C0M-P4: Scanning area..."));
+	if (!GetWorld()) return;
+
+	// Set origin (himself)
+	FVector ScanOrigin = GetActorLocation();
+
+	// Trace config
+	TArray<FHitResult> HitResults;
+	FCollisionShape ScanSphere = FCollisionShape::MakeSphere(ScanRadius);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	if (OwnerCharacter)
+	{
+		QueryParams.AddIgnoredActor(OwnerCharacter);
+	}
+
+	// execute "scan"
+	bool bHit = GetWorld()->SweepMultiByChannel(
+		HitResults,
+		ScanOrigin,
+		ScanOrigin,
+		FQuat::Identity,
+		ECC_Visibility,
+		ScanSphere,
+		QueryParams
+	);
+
+	// Process results
+	if (bHit)
+	{
+		TSet<AActor*> ProcessedActors;
+
+		for (const FHitResult& Hit : HitResults)
+		{
+			AActor* FoundActor = Hit.GetActor();
+			if (FoundActor && FoundActor->ActorHasTag(TEXT("Scannable")) && !ProcessedActors.Contains(FoundActor))
+			{
+				ProcessedActors.Add(FoundActor);
+				GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Orange, FString::Printf(TEXT("C0M-P4 has detected: %s"), *FoundActor->GetName()));
+			}
+		}
+	}
+
+	DrawDebugSphere(GetWorld(), ScanOrigin, ScanRadius, 32, FColor::Cyan, false, 1.0f, 0, 2.0f);
 }
 
 void AVA_Companion::StartGasProtocol()

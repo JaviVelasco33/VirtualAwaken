@@ -4,7 +4,7 @@
 #include "Core/Dialogues/VA_DialogueManager.h"
 #include "Core/VA_GameInstance.h"
 #include "Widgets/VA_DialogueWidget.h"
-#include "Characters/VA_Character.h"
+#include "Character/VA_Character.h"
 #include "Framework/Application/SlateApplication.h"
 
 void UVA_DialogueManager::HandleDialogueInteraction(UVA_DialogueAsset* NewAsset, AVA_BaseNPC* InNPC)

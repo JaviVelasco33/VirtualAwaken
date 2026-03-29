@@ -75,6 +75,13 @@ public:
 	void CancelRepair();
 
 protected:
+	// Scan wave radius
+	UPROPERTY(EditAnywhere, Category = "VA | Abilities")
+	float ScanRadius = 750.f;
+
+	// time that the objects remain marked
+	UPROPERTY(EditAnywhere, Category = "VA | Abilities")
+	float ScanDuration = 5.0f;
 
 	// Timer for reparation
 	FTimerHandle RepairTH;

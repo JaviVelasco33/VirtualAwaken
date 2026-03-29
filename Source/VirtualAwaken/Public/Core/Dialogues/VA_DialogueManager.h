@@ -6,7 +6,7 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "VA_DialogueAsset.h"
 #include "Widgets/VA_DialogueWidget.h"
-#include "Characters/VA_BaseNPC.h"
+#include "NPCs/VA_BaseNPC.h"
 #include "VA_DialogueManager.generated.h"
 
 /**

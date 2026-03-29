@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Characters/VA_Character.h"
+#include "Character/VA_Character.h"
 #include "Camera/CameraComponent.h"
 #include "Components/VA_AttributeComponent.h"
 #include "Components/VA_InteractionComponent.h"
@@ -13,7 +13,7 @@
 #include "Interfaces/VA_InteractableInterface.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Core/Dialogues/VA_DialogueManager.h"
-#include "Characters/VA_Companion.h"
+#include "NPCs/VA_Companion.h"
 #include "Kismet/GameplayStatics.h"
 
 #pragma region CONSTRUCTOR
@@ -74,9 +74,6 @@ void AVA_Character::BeginPlay()
 {
 	Super::BeginPlay();
 
-	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
-	SprintSpeed = WalkSpeed * 1.8f;
-
 	PlayerController = Cast<APlayerController>(Controller);
 	
 	// Add the Mapping context on init
@@ -87,6 +84,8 @@ void AVA_Character::BeginPlay()
 			Subsystem->AddMappingContext(DefaultMappingContext, 0);
 		}
 	}
+
+	CheckPhases();
 }
 
 // Called every frame
@@ -452,6 +451,41 @@ void AVA_Character::Interact()
     InteractionComponent->PrimaryInteract();
 	}
 }
+#pragma endregion
+
+#pragma region ATTRIBUTES
+void AVA_Character::CheckPhases()
+{
+	// Adjust variables that change on differents phases
+	switch (CurrentPhase)
+	{
+	case EVA_Phase::Phase1:
+		SpeedMultiplier = 1.f;
+		JumpMaxCount = 1;
+		break;
+	case EVA_Phase::Phase2:
+		SpeedMultiplier = 1.f;
+		JumpMaxCount = 1;
+		break;
+	case EVA_Phase::Phase3:
+		SpeedMultiplier = 1.8f;
+		JumpMaxCount = 2;
+		break;
+	case EVA_Phase::Phase4:
+		break;
+	default:
+		break;
+	}
+
+	SetupAttributes();
+}
+
+void AVA_Character::SetupAttributes()
+{
+	WalkSpeed = GetCharacterMovement()->MaxWalkSpeed;
+	SprintSpeed = WalkSpeed * SpeedMultiplier;
+}
+
 #pragma endregion
 
 #pragma region DIALOGUE
