@@ -92,5 +92,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "VA | Dialogue")
   FText GetNPCName() const { return NPCName; }
+
+	UFUNCTION(BlueprintCallable, Category = "VA | Atrributes")
+  EVA_NPCType GetNPCType() const { return NPCType; }
 #pragma endregion
 };
