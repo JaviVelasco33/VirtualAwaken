@@ -65,17 +65,21 @@ void UVA_InteractionComponent::TickComponent(float DeltaTime, ELevelTick TickTyp
 
 TObjectPtr<AActor> UVA_InteractionComponent::FindBestCandidate()
 {
+  // If a dialogue is active, we don't want to allow interactions, so we return nullptr and clear the best candidate.
 	UVA_DialogueManager* DM = GetWorld()->GetGameInstance()->GetSubsystem<UVA_DialogueManager>();
 	if (DM && DM->IsDialogueActive())
 	{
 		return BestCandidate = nullptr;
 	}
 
+  // If there is no player controller or pawn, we can't perform the search, so we return nullptr and clear the best candidate.
 	APlayerController* PC = GetWorld()->GetFirstPlayerController();
 	if (!PC && !PC->GetPawn()) return nullptr;
 
+  // Get the location of the character that owns this component. This will be used as the reference point for searching interactable actors.
 	FVector CharacterLoc = GetOwner()->GetActorLocation();
 
+  // Get the view location and direction of the player controller. This will be used to determine which actors are in front of the player and how centered they are in the view.
 	FVector ViewLoc;
 	FRotator ViewRot;
 	PC->GetPlayerViewPoint(ViewLoc, ViewRot);
@@ -92,6 +96,7 @@ TObjectPtr<AActor> UVA_InteractionComponent::FindBestCandidate()
 	AActor* Winner = nullptr;
 	float BestScore = -1.0f;
 
+  // Iterate through all the actors that were hit by the overlap query and filter them based on whether they implement the interactable interface, whether they can be interacted with, whether they have a valid interaction row in the data table, and whether they are in front of the player and have a clear line of sight. We also calculate a score for each actor based on how centered they are in the view and how close they are to the player, and we keep track of the actor with the highest score as the best candidate.
 	for (const FOverlapResult& Hit : Hits)
 	{
 		AActor* Potential = Hit.GetActor();

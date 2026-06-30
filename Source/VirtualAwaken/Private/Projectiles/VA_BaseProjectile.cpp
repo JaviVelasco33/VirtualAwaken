@@ -38,7 +38,11 @@ AVA_BaseProjectile::AVA_BaseProjectile()
 	if (!ProjectileMovement)
 	{
 		ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
-		ProjectileMovement->SetUpdatedComponent(CollisionComp);
+		ProjectileMovement->UpdatedComponent = CollisionComp;
+
+		ProjectileMovement->InitialSpeed = 1000.f;
+		ProjectileMovement->MaxSpeed = 1500.f;
+		ProjectileMovement->ProjectileGravityScale = 0.f;
 	}
 
 }
@@ -70,12 +74,13 @@ void AVA_BaseProjectile::OnProjectileHit(UPrimitiveComponent* HitComp, AActor* O
     // if the projectile hits an NPC of the other team, apply damage
 		if (SourceTeam == EVA_Team::Ally && HitNPC->GetNPCType() == EVA_NPCType::Enemy) bShouldApplyDamage = true;
     if (SourceTeam == EVA_Team::Enemy && HitNPC->GetNPCType() != EVA_NPCType::Enemy) bShouldApplyDamage = true;
+		if (SourceTeam == EVA_Team::Neutral) bShouldApplyDamage = true;
 	}
 	// OtherActor is the Player
 	else if (AVA_Character* Player = Cast<AVA_Character>(OtherActor))
 	{
 		// Enemy projectile's should apply damage to the player
-		if (SourceTeam == EVA_Team::Enemy) bShouldApplyDamage = true;
+		if (SourceTeam == EVA_Team::Enemy || SourceTeam == EVA_Team::Neutral) bShouldApplyDamage = true;
 	}
 	if (bShouldApplyDamage)
 	{

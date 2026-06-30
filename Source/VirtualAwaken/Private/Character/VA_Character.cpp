@@ -365,40 +365,36 @@ void AVA_Character::CompanionOrders(const FInputActionInstance& Instance)
 	// Get the action that was just pressed
 	const UInputAction* TriggeredAction = Instance.GetSourceAction();
 
-	if (TriggeredAction == Order1Action)
+	if (TriggeredAction == Order1Action && ActiveCompanion)
 	{
+    ActiveCompanion->StartAssaultProtocol();
+    if (GEngine)
+		{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_1")));
+		}
+	}
+
+	if (TriggeredAction == Order2Action && ActiveCompanion)
+	{
+		ActiveCompanion->StartGasProtocol();
 		if (GEngine)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_1")));
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_2")));
 		}
 	}
 
-	if (TriggeredAction == Order2Action)
+	if (TriggeredAction == Order3Action && ActiveCompanion)
 	{
-		if (ActiveCompanion)
-		{
-			ActiveCompanion->StartGasProtocol();
-			if (GEngine)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_2")));
-			}
-		}
+		ActiveCompanion->StartRepairProtocol();
+    if (GEngine)
+    {
+      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_3")));
+    }
 	}
 
-	if (TriggeredAction == Order3Action)
+	if (TriggeredAction == Order4Action && ActiveCompanion)
 	{
-		if (ActiveCompanion)
-		{
-			ActiveCompanion->StartRepairProtocol();
-      if (GEngine)
-      {
-        GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_3")));
-      }
-		}
-	}
-
-	if (TriggeredAction == Order4Action)
-	{
+		ActiveCompanion->StartDistractionProtocol();
 		if (GEngine)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_4")));
