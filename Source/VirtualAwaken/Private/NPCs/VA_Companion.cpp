@@ -64,48 +64,7 @@ void AVA_Companion::Tick(float DeltaTime)
 	}
 	else
 	{
-		if (OwnerCharacter)
-		{
-			// Save actual position
-			FVector CurrentLoc = GetActorLocation();
-
-			// Calculate the new position
-			FVector OffsetRotated = OwnerCharacter->GetActorRotation().RotateVector(OffsetFromOwner);
-			FVector TargetLoc = OwnerCharacter->GetActorLocation() + OffsetRotated;
-
-			// Move with smooth interp
-			FVector NewLoc = FMath::VInterpTo(CurrentLoc, TargetLoc, DeltaTime, FollowSpeed);
-			SetActorLocation(NewLoc, true, nullptr, ETeleportType::None);
-
-			// Save actual rotation
-			FRotator CurrentRot = GetActorRotation();
-			FRotator TargetRot;
-
-			// Calculate vector direction
-			FVector MoveDir = TargetLoc - CurrentLoc;
-
-			// Check if it is moving (with tolerance)
-			if (MoveDir.SizeSquared() > 50000.f)
-			{
-				// Look forward direction
-				TargetRot = MoveDir.Rotation();
-			}
-			else
-			{
-				// If has arrive his position, copy player rotation
-				TargetRot = OwnerCharacter->GetActorRotation();
-			}
-
-			if (bInAssaultMode)
-			{
-				RotateTowardsTarget(DeltaTime);
-			}
-			else
-			{
-				// Apply smooth rotation
-				SetActorRotation(FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, FollowSpeed / 2.f));
-			}
-		}
+		HandleBasicFollow(DeltaTime);
 	}
 }
 #pragma endregion
@@ -480,11 +439,14 @@ void AVA_Companion::ExecuteFakeReturn(float DeltaTime)
 	if (ReturnStage == 1)
 	{
 		// Shoot straight up into the sky
-		FVector UpTarget = GetActorLocation() + FVector(0.f, 0.f, 1000.f);
+    float TargetHeight = OwnerCharacter->GetActorLocation().Z + 600.f;
+		FVector UpTarget = FVector(GetActorLocation().X, GetActorLocation().Y, TargetHeight);
+
+    // Smoothly move upwards
 		SetActorLocation(FMath::VInterpTo(GetActorLocation(), UpTarget, DeltaTime, FollowSpeed));
 
 		// Once high enough teleport behing camera
-		if (FVector::DistXY(GetActorLocation(), UpTarget) < 200.f || GetActorLocation().Z >= UpTarget.Z - 200.f)
+		if (FMath::IsNearlyEqual(GetActorLocation().Z, UpTarget.Z, 10.f))
 		{
 			APlayerController* PC = Cast<APlayerController>(OwnerCharacter->GetController());
 
@@ -495,7 +457,8 @@ void AVA_Companion::ExecuteFakeReturn(float DeltaTime)
 				PC->GetPlayerViewPoint(CamLoc, CamRot);
 
 				// Teleport behind the player
-				FVector BehindCamLoc = CamLoc - (CamRot.Vector() * 300.f) + FVector(0.f, 0.f, 400.f);
+				FVector BehindCamLoc = CamLoc - (CamRot.Vector() * 400.f);
+				BehindCamLoc.Z = OwnerCharacter->GetActorLocation().Z + 90.f; // Keep it at the same height as the player
 				SetActorLocation(BehindCamLoc);
 
 				ReturnStage = 2;
@@ -505,16 +468,113 @@ void AVA_Companion::ExecuteFakeReturn(float DeltaTime)
 	else if (ReturnStage == 2)
 	{
 		// Smoothly blend back into the player
-		FVector IdelaShoulderLoc = OwnerCharacter->GetActorLocation() + OffsetFromOwner;
-		SetActorLocation(FMath::VInterpTo(GetActorLocation(), IdelaShoulderLoc, DeltaTime, 8.f));
+    FVector OffsetRotated = OwnerCharacter->GetActorRotation().RotateVector(OffsetFromOwner);
+		FVector ShoulderTarget = OwnerCharacter->GetActorLocation() + OffsetRotated;
 
-		if (FVector::Dist(GetActorLocation(), IdelaShoulderLoc) < 50.f)
+		SetActorLocation(FMath::VInterpTo(GetActorLocation(), ShoulderTarget, DeltaTime, FollowSpeed));
+
+    FRotator NewRot = FMath::RInterpTo(GetActorRotation(), OwnerCharacter->GetActorRotation(), DeltaTime, FollowSpeed / 2.f);
+		SetActorRotation(NewRot);
+
+		if (FVector::Dist(GetActorLocation(), ShoulderTarget) < 30.f)
 		{
 			bIsReturningHome = false;
 			ReturnStage = 0;
 			bIsCompanionBusy = false;
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan, TEXT("C0M-P4: Welcome home. Ready for next command."));
 		}
+	}
+}
+
+void AVA_Companion::HandleBasicFollow(float DeltaTime)
+{
+	if (!OwnerCharacter) return;
+
+	// Save actual position
+	FVector CurrentLoc = GetActorLocation();
+
+	// Calculate the new position
+	FVector OffsetRotated = OwnerCharacter->GetActorRotation().RotateVector(OffsetFromOwner);
+	FVector IdealTargetLoc = OwnerCharacter->GetActorLocation() + OffsetRotated;
+
+	// Safety Position
+  FVector SafetyOffset = FVector(-75.f, 0.f, 90.f);
+  FVector SafetyTargetLoc = OwnerCharacter->GetActorLocation() + SafetyOffset;
+
+  FVector FinalTargetLoc = IdealTargetLoc;
+
+  FHitResult ObstacleHit;
+  FCollisionQueryParams TraceParams;
+  TraceParams.AddIgnoredActor(this);
+  TraceParams.AddIgnoredActor(OwnerCharacter);
+
+  FVector TraceStart = OwnerCharacter->GetActorLocation() + FVector(0.f, 0.f, 90.f);
+
+  FCollisionShape ComfortSphere = FCollisionShape::MakeSphere(45.f);
+
+	bool bHitComfortZone = GetWorld()->SweepSingleByChannel(
+		ObstacleHit,
+		TraceStart,
+		IdealTargetLoc,
+    FQuat::Identity,
+		ECC_WorldStatic,
+		ComfortSphere,
+    TraceParams
+	);
+
+	if (bHitComfortZone)
+	{
+		// If there is an obstacle, we adjust the target location to be in front of the obstacle
+		FinalTargetLoc = SafetyTargetLoc;
+    FHitResult EmergencyHit;
+
+		bool bSafetyObstructed = GetWorld()->SweepSingleByChannel(
+			EmergencyHit,
+			TraceStart,
+			SafetyTargetLoc,
+			FQuat::Identity,
+			ECC_WorldStatic,
+			ComfortSphere,
+			TraceParams
+    );
+
+		if (bSafetyObstructed)
+		{
+      FinalTargetLoc = EmergencyHit.ImpactPoint + (EmergencyHit.ImpactNormal * 20.f);
+		}
+	}
+
+	// Move with smooth interp
+	FVector NewLoc = FMath::VInterpTo(CurrentLoc, FinalTargetLoc, DeltaTime, FollowSpeed);
+	SetActorLocation(NewLoc);
+
+	// Save actual rotation
+	FRotator CurrentRot = GetActorRotation();
+	FRotator TargetRot;
+
+	// Calculate vector direction
+	FVector MoveDir = FinalTargetLoc - CurrentLoc;
+
+	// Check if it is moving (with tolerance)
+	if (MoveDir.SizeSquared() > 50000.f)
+	{
+		// Look forward direction
+		TargetRot = MoveDir.Rotation();
+	}
+	else
+	{
+		// If has arrive his position, copy player rotation
+		TargetRot = OwnerCharacter->GetActorRotation();
+	}
+
+	if (bInAssaultMode)
+	{
+		RotateTowardsTarget(DeltaTime);
+	}
+	else
+	{
+		// Apply smooth rotation
+		SetActorRotation(FMath::RInterpTo(CurrentRot, TargetRot, DeltaTime, FollowSpeed / 2.f));
 	}
 }
 

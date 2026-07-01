@@ -206,6 +206,7 @@ private:
 	void ResetRepairCooldown() { bIsRepairOnCD = false; }
 	void ResetDistractCooldown() { bIsDistractOnCD = false; }
 
+	void HandleBasicFollow(float DeltaTime);
 
 #pragma endregion
 };
