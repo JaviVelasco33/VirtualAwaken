@@ -189,7 +189,6 @@ private:
 	bool bIsRepairOnCD = false;
 	bool bIsDistractOnCD = false;
 
-
 	FTimerHandle CooldownTH;
 
 	// Orbit angle tracker
