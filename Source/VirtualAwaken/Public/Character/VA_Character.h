@@ -153,6 +153,7 @@ protected:
 	void AimEnd();
 	void Shoot();
 	void LockOn();
+	void LockOff();
 	void ToggleSprint();
 	void CompanionOrders(const struct FInputActionInstance& Instance);
 	void ShowMap();
@@ -226,5 +227,27 @@ public:
 	// Search and attach companion
 	UFUNCTION(BlueprintCallable, Category = "VA | Companion")
 	void AttachCompanion();
+#pragma endregion
+
+	#pragma region DASH
+public:
+	// Dash Cooldown
+	UPROPERTY(EditAnywhere, Category = "VA | Dash")
+	float DashCD = 2.f;
+
+	// Force apply to dash
+	UPROPERTY(EditAnywhere, Category = "VA | Dash")
+	float DashForce = 2000.f;
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "VA | Dash")
+	UAnimMontage* DashAnim;
+
+private:
+	FTimerHandle DashTH;
+	// Function to block multiple uses of dash until it reset
+	void ApplyDashCD();
+	bool bCanDash = true;
+	bool bIsAbleToDash = false;
+
 #pragma endregion
 };

@@ -248,6 +248,8 @@ void AVA_Character::StartJump()
 {
 	if (bInDialogueMode) return;
 
+	GetCharacterMovement()->JumpZVelocity = 400.f * SpeedMultiplier;
+
 	Jump();
 }
 
@@ -270,12 +272,43 @@ void AVA_Character::Attack()
 
 void AVA_Character::Dash()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || !bIsAbleToDash) return;
+	if (!bCanDash) return;
 
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Dash")));
 	}
+
+	bCanDash = false;
+	FVector CharVelocity = GetVelocity();
+	FVector CharVelNormalized = CharVelocity.GetSafeNormal(0.001f);
+	FVector LaunchVelocity;
+
+	if (CharVelocity.Length() < 1.0)
+	{
+		LaunchVelocity = GetActorForwardVector() * DashForce;
+	}
+	else
+	{
+		LaunchVelocity = CharVelNormalized * DashForce;
+	}
+
+	PlayAnimMontage(DashAnim);
+	LaunchCharacter(LaunchVelocity, false, true);
+
+
+	UWorld* World = GetWorld();
+	if (!World) return;
+
+	// Prevent bugs if the player presses the button multiple times.
+	if (World->GetTimerManager().IsTimerActive(DashTH))
+	{
+		return;
+	}
+
+	// Unlock the dash after the cooldown
+	World->GetTimerManager().SetTimer(DashTH, this, &AVA_Character::ApplyDashCD, DashCD, false);
 }
 
 void AVA_Character::Scanner()
@@ -339,6 +372,16 @@ void AVA_Character::LockOn()
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("LockOn")));
+	}
+}
+
+void AVA_Character::LockOff()
+{
+	if (bInDialogueMode) return;
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("LockOff")));
 	}
 }
 
@@ -456,18 +499,24 @@ void AVA_Character::CheckPhases()
 	switch (CurrentPhase)
 	{
 	case EVA_Phase::Phase1:
-		SpeedMultiplier = 1.f;
+		SpeedMultiplier = 1.2f;
 		JumpMaxCount = 1;
+    bIsAbleToDash = false;
 		break;
 	case EVA_Phase::Phase2:
-		SpeedMultiplier = 1.f;
+		SpeedMultiplier = 1.2f;
 		JumpMaxCount = 1;
+		bIsAbleToDash = false;
 		break;
 	case EVA_Phase::Phase3:
 		SpeedMultiplier = 1.8f;
 		JumpMaxCount = 2;
+		bIsAbleToDash = false;
 		break;
 	case EVA_Phase::Phase4:
+		SpeedMultiplier = 1.8f;
+		JumpMaxCount = 2;
+		bIsAbleToDash = true;
 		break;
 	default:
 		break;
@@ -555,5 +604,12 @@ void AVA_Character::AttachCompanion()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Error: Doesn't found any C0M-P4 in this level."));
 	}
+}
+#pragma endregion
+
+#pragma region DASH
+void AVA_Character::ApplyDashCD()
+{
+	bCanDash = true;
 }
 #pragma endregion
