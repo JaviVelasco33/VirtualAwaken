@@ -3,6 +3,7 @@
 
 #include "Character/VA_Character.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/VA_AttributeComponent.h"
 #include "Components/VA_InteractionComponent.h"
 #include "Engine/OverlapResult.h"
@@ -65,6 +66,11 @@ AVA_Character::AVA_Character()
 
 	// ------ Interaction Component ------
 	InteractionComponent = CreateDefaultSubobject<UVA_InteractionComponent>(TEXT("InteractionComponent"));
+
+	// ------ Attack Collision Component ------
+	AttackCollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCollisionComponent"));
+	AttackCollisionComponent->SetupAttachment(GetMesh(), FName("WeaponSocket"));
+	AttackCollisionComponent->SetBoxExtent(FVector(10.f, 10.f, 10.f), true);
 }
 #pragma endregion
 
@@ -174,7 +180,7 @@ void AVA_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EIC->BindAction(ShootAction, ETriggerEvent::Started, this, &AVA_Character::Shoot);
 
 		// Link the lock on action
-		EIC->BindAction(LockOnAction, ETriggerEvent::Started, this, &AVA_Character::LockOn);
+		EIC->BindAction(LockOnAction, ETriggerEvent::Started, this, &AVA_Character::ToggleLockOn);
 
 		// Link the sprint action
 		EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &AVA_Character::ToggleSprint);
@@ -222,7 +228,7 @@ void AVA_Character::Move(const FInputActionValue& Value)
 //When stop moving
 void AVA_Character::StopSprintOnMoveEnd()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || !GetCharacterMovement()) return;
 
 	if (GetCharacterMovement())
 	{
@@ -246,7 +252,7 @@ void AVA_Character::Look(const FInputActionValue& Value)
 
 void AVA_Character::StartJump()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || !GetCharacterMovement()) return;
 
 	GetCharacterMovement()->JumpZVelocity = 400.f * SpeedMultiplier;
 
@@ -268,12 +274,17 @@ void AVA_Character::Attack()
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Attack")));
 	}
+
+	PlayAnimMontage(AttackAnim);
 }
 
 void AVA_Character::Dash()
 {
-	if (bInDialogueMode || CurrentPhase != EVA_Phase::Phase4) return;
-	if (!bCanDash) return;
+	if (bInDialogueMode || 
+		CurrentPhase == EVA_Phase::Phase1 || 
+		CurrentPhase == EVA_Phase::Phase2 ||
+		!GetCharacterMovement() ||
+		!bCanDash) return;
 
 	if (GEngine)
 	{
@@ -288,7 +299,7 @@ void AVA_Character::Dash()
 	const bool bIsMoving = CharVelocity.Size2D() > 1.0f;
 
 	// If the character is in the air
-	if (bIsFalling)
+	if (bIsFalling && CurrentPhase == EVA_Phase::Phase4)
 	{
 		// If jumps/falls while stationary
 		if (!bIsMoving)
@@ -330,12 +341,10 @@ void AVA_Character::Dash()
 
 void AVA_Character::Scanner()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || !ActiveCompanion) return;
 
-	if (ActiveCompanion)
-	{
-		ActiveCompanion->ExecuteScan();
-	}
+	ActiveCompanion->ExecuteScan();
+
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("Scanner")));
@@ -344,7 +353,7 @@ void AVA_Character::Scanner()
 
 void AVA_Character::Gadget()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || CurrentPhase != EVA_Phase::Phase4) return;
 
 	if (GEngine)
 	{
@@ -382,7 +391,7 @@ void AVA_Character::Shoot()
 	}
 }
 
-void AVA_Character::LockOn()
+void AVA_Character::ToggleLockOn()
 {
 	if (bInDialogueMode || CurrentPhase == EVA_Phase::Phase1) return;
 
@@ -405,18 +414,20 @@ void AVA_Character::LockOn()
 
 void AVA_Character::ToggleSprint()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || 
+		CurrentPhase == EVA_Phase::Phase1 || 
+		CurrentPhase == EVA_Phase::Phase2 ||
+		!GetCharacterMovement()) return;
 
-	if (!GetCharacterMovement()) return;
-
-	if (GetCharacterMovement()->MaxWalkSpeed <= WalkSpeed)
-	{
-		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
-	}
-	else
+	if (bIsSprinting)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = WalkSpeed;
 	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = SprintSpeed;
+	}
+  bIsSprinting = !bIsSprinting;
 }
 
 void AVA_Character::CompanionOrders(const FInputActionInstance& Instance)
@@ -522,6 +533,9 @@ void AVA_Character::CheckPhases()
 		JumpMaxCount = 1;
 		break;
 	case EVA_Phase::Phase3:
+		SpeedMultiplier = 1.4f;
+		JumpMaxCount = 2;
+		break;
 	case EVA_Phase::Phase4:
 		SpeedMultiplier = 1.8f;
 		JumpMaxCount = 2;

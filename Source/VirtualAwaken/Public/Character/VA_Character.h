@@ -44,13 +44,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Camera")
 	TObjectPtr<class UCameraComponent> FollowCamera;
 
-	// 
+	// Component to manage the health and energy
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Components")
 	TObjectPtr<class UVA_AttributeComponent> AttributeComponent;
 
   // Interaction component to handle interactions with the environment
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Components")
   TObjectPtr<class UVA_InteractionComponent> InteractionComponent;
+
+	// Collision in the right hand to apply damage to the enemies
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Components")
+  TObjectPtr<class UBoxComponent> AttackCollisionComponent;
 #pragma endregion
 
 #pragma region GETTERS
@@ -152,7 +156,7 @@ protected:
 	void AimStart();
 	void AimEnd();
 	void Shoot();
-	void LockOn();
+	void ToggleLockOn();
 	void ToggleSprint();
 	void CompanionOrders(const struct FInputActionInstance& Instance);
 	void ShowMap();
@@ -228,7 +232,7 @@ public:
 	void AttachCompanion();
 #pragma endregion
 
-	#pragma region DASH
+#pragma region DASH
 public:
 	// Dash Cooldown
 	UPROPERTY(EditAnywhere, Category = "VA | Dash")
@@ -259,6 +263,27 @@ private:
 
 #pragma endregion
 
+#pragma region SPRINT
+public:
+
+protected:
+
+private:
+	bool bIsSprinting = false;
+
+#pragma endregion
+
+#pragma region ATTACK
+public:
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "VA | Attack")
+	UAnimMontage* AttackAnim;
+
+
+private:
+
+#pragma endregion
 #pragma region 
 public:
 
