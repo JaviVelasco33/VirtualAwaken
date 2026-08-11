@@ -153,7 +153,6 @@ protected:
 	void AimEnd();
 	void Shoot();
 	void LockOn();
-	void LockOff();
 	void ToggleSprint();
 	void CompanionOrders(const struct FInputActionInstance& Instance);
 	void ShowMap();
@@ -233,11 +232,11 @@ public:
 public:
 	// Dash Cooldown
 	UPROPERTY(EditAnywhere, Category = "VA | Dash")
-	float DashCD = 2.f;
+	float DashCD = 1.5f;
 
 	// Force apply to dash
 	UPROPERTY(EditAnywhere, Category = "VA | Dash")
-	float DashForce = 2000.f;
+	float DashForce = 2500.f;
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "VA | Dash")
 	UAnimMontage* DashAnim;
@@ -247,7 +246,25 @@ private:
 	// Function to block multiple uses of dash until it reset
 	void ApplyDashCD();
 	bool bCanDash = true;
-	bool bIsAbleToDash = false;
+
+#pragma endregion
+
+#pragma region LOCK ON/OFF
+public:
+
+protected:
+
+private:
+	bool bShouldLockOn = true;
+
+#pragma endregion
+
+#pragma region 
+public:
+
+protected:
+
+private:
 
 #pragma endregion
 };

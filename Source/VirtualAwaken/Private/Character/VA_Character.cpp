@@ -262,7 +262,7 @@ void AVA_Character::StopJump()
 
 void AVA_Character::Attack()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || CurrentPhase == EVA_Phase::Phase1) return;
 
 	if (GEngine)
 	{
@@ -272,7 +272,7 @@ void AVA_Character::Attack()
 
 void AVA_Character::Dash()
 {
-	if (bInDialogueMode || !bIsAbleToDash) return;
+	if (bInDialogueMode || CurrentPhase != EVA_Phase::Phase4) return;
 	if (!bCanDash) return;
 
 	if (GEngine)
@@ -282,20 +282,37 @@ void AVA_Character::Dash()
 
 	bCanDash = false;
 	FVector CharVelocity = GetVelocity();
-	FVector CharVelNormalized = CharVelocity.GetSafeNormal(0.001f);
+	FVector CharVelNormalized2D = CharVelocity.GetSafeNormal2D(0.001f);
 	FVector LaunchVelocity;
+	const bool bIsFalling = GetCharacterMovement()->IsFalling();
+	const bool bIsMoving = CharVelocity.Size2D() > 1.0f;
 
-	if (CharVelocity.Length() < 1.0)
+	// If the character is in the air
+	if (bIsFalling)
 	{
-		LaunchVelocity = GetActorForwardVector() * DashForce;
+		// If jumps/falls while stationary
+		if (!bIsMoving)
+		{
+			LaunchVelocity = FVector(0.f, 0.f, DashForce * 0.35f);
+		}
+		// If jumps/falls while is moving
+		else
+		{
+			LaunchVelocity = GetActorForwardVector().GetSafeNormal2D() * (DashForce * 0.65f) + FVector(0.f, 0.f, 100.f);
+		}
 	}
+	// If the character is on the ground
 	else
 	{
-		LaunchVelocity = CharVelNormalized * DashForce;
+		// If is moving, use their direction of movemente; if is still, use his gaze.
+		FVector DashDirection = bIsMoving ? CharVelNormalized2D : GetActorForwardVector().GetSafeNormal2D();
+
+		// Short elevation to avoid frictions
+		LaunchVelocity = DashDirection * DashForce + FVector(0.f, 0.f, 100.f);
 	}
 
 	PlayAnimMontage(DashAnim);
-	LaunchCharacter(LaunchVelocity, false, true);
+	LaunchCharacter(LaunchVelocity, true, true);
 
 
 	UWorld* World = GetWorld();
@@ -337,7 +354,7 @@ void AVA_Character::Gadget()
 
 void AVA_Character::AimStart()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || CurrentPhase == EVA_Phase::Phase1) return;
 
 	if (GEngine)
 	{
@@ -347,7 +364,7 @@ void AVA_Character::AimStart()
 
 void AVA_Character::AimEnd()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || CurrentPhase == EVA_Phase::Phase1) return;
 
 	if (GEngine)
 	{
@@ -357,7 +374,7 @@ void AVA_Character::AimEnd()
 
 void AVA_Character::Shoot()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || CurrentPhase == EVA_Phase::Phase1) return;
 
 	if (GEngine)
 	{
@@ -367,22 +384,23 @@ void AVA_Character::Shoot()
 
 void AVA_Character::LockOn()
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || CurrentPhase == EVA_Phase::Phase1) return;
 
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("LockOn")));
+	if (bShouldLockOn)
+  {
+    if (GEngine)
+    {
+      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("LockOn")));
+    }
 	}
-}
-
-void AVA_Character::LockOff()
-{
-	if (bInDialogueMode) return;
-
-	if (GEngine)
+	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("LockOff")));
+    if (GEngine)
+    {
+      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("LockOff")));
+    }
 	}
+	bShouldLockOn = !bShouldLockOn;
 }
 
 void AVA_Character::ToggleSprint()
@@ -403,12 +421,12 @@ void AVA_Character::ToggleSprint()
 
 void AVA_Character::CompanionOrders(const FInputActionInstance& Instance)
 {
-	if (bInDialogueMode) return;
+	if (bInDialogueMode || !ActiveCompanion) return;
 
 	// Get the action that was just pressed
 	const UInputAction* TriggeredAction = Instance.GetSourceAction();
 
-	if (TriggeredAction == Order1Action && ActiveCompanion)
+	if (TriggeredAction == Order1Action)
 	{
     ActiveCompanion->StartAssaultProtocol();
     if (GEngine)
@@ -417,7 +435,7 @@ void AVA_Character::CompanionOrders(const FInputActionInstance& Instance)
 		}
 	}
 
-	if (TriggeredAction == Order2Action && ActiveCompanion)
+	if (TriggeredAction == Order2Action)
 	{
 		ActiveCompanion->StartGasProtocol();
 		if (GEngine)
@@ -426,7 +444,7 @@ void AVA_Character::CompanionOrders(const FInputActionInstance& Instance)
 		}
 	}
 
-	if (TriggeredAction == Order3Action && ActiveCompanion)
+	if (TriggeredAction == Order3Action)
 	{
 		ActiveCompanion->StartRepairProtocol();
     if (GEngine)
@@ -435,7 +453,7 @@ void AVA_Character::CompanionOrders(const FInputActionInstance& Instance)
     }
 	}
 
-	if (TriggeredAction == Order4Action && ActiveCompanion)
+	if (TriggeredAction == Order4Action)
 	{
 		ActiveCompanion->StartDistractionProtocol();
 		if (GEngine)
@@ -499,24 +517,14 @@ void AVA_Character::CheckPhases()
 	switch (CurrentPhase)
 	{
 	case EVA_Phase::Phase1:
-		SpeedMultiplier = 1.2f;
-		JumpMaxCount = 1;
-    bIsAbleToDash = false;
-		break;
 	case EVA_Phase::Phase2:
 		SpeedMultiplier = 1.2f;
 		JumpMaxCount = 1;
-		bIsAbleToDash = false;
 		break;
 	case EVA_Phase::Phase3:
-		SpeedMultiplier = 1.8f;
-		JumpMaxCount = 2;
-		bIsAbleToDash = false;
-		break;
 	case EVA_Phase::Phase4:
 		SpeedMultiplier = 1.8f;
 		JumpMaxCount = 2;
-		bIsAbleToDash = true;
 		break;
 	default:
 		break;
