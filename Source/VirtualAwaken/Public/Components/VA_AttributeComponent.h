@@ -54,8 +54,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	float GetCurrentHealth() const { return CurrentHealth; }
 
-		UFUNCTION(BlueprintCallable, Category = "Attributes")
+	UFUNCTION(BlueprintCallable, Category = "Attributes")
 	float GetMaxHealth() const { return MaxHealth; }
+
+	// Receive the delegate from TakeAnyDamage
+	UFUNCTION()
+	void HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 #pragma endregion
 };

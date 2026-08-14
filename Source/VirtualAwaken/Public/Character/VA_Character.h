@@ -275,10 +275,19 @@ private:
 
 #pragma region ATTACK
 public:
+	UFUNCTION()
+	void OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	// Toggle Attack collision
+  UFUNCTION(BlueprintCallable, Category = "Combat")
+  void SetAttackCollisionEnabled(bool bEnable);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "VA | Attack")
 	UAnimMontage* AttackAnim;
+
+	UPROPERTY(EditAnywhere, Category = "VA | Attack")
+	float AttackDamage = 10.f;
 
 
 private:

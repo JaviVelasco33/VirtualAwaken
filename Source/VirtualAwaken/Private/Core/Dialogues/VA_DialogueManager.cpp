@@ -68,8 +68,15 @@ void UVA_DialogueManager::StartDialogue()
 
 void UVA_DialogueManager::NextStep()
 {
+  // Don't advance it the typewriter is still typing
+  if (ActiveWidget && ActiveWidget->IsTyping())
+  {
+    ActiveWidget->SkipTypewriter();
+    return;
+  }
+  
   // If there are options, not advance with E
-  //if (CurrentIndex == CurrentAsset->Lines.Num() - 1 && CurrentAsset->Choices.Num() > 0) return;
+  //if (CurrentIndex == CurrentAsset->Lines.Num() - 1 && CurrentAsset->ChoicePoint.Num() > 0) return;
 
   // If the dialogue is the same, advance to the next line
   CurrentIndex++;
@@ -189,17 +196,10 @@ void UVA_DialogueManager::EndDialogue()
     // Unlock movement and cam rotation
     PC->ResetIgnoreMoveInput();
     PC->ResetIgnoreLookInput();
-
-    //FInputModeGameAndUI InputMode;
-    //PC->SetInputMode(InputMode);
-    //PC->bShowMouseCursor = false;
-
     FInputModeGameOnly InputMode;
-    //InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-    //InputMode.SetHideCursorDuringCapture(true);
-    //InputMode.SetWidgetToFocus(ActiveWidget->TakeWidget());
     PC->SetInputMode(InputMode);
     PC->bShowMouseCursor = false;
+    PC->FlushPressedKeys();
 
     // Force the focus back to viewport
     PC->SetInputMode(FInputModeGameOnly());

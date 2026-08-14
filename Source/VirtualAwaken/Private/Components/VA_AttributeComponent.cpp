@@ -19,6 +19,12 @@ void UVA_AttributeComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Get the component owner and suscribe the damage delegate
+	AActor* MyOwner = GetOwner();
+	if (MyOwner)
+	{
+		MyOwner->OnTakeAnyDamage.AddDynamic(this, &UVA_AttributeComponent::HandleTakeAnyDamage);
+	}
 }
 
 // Called every frame
@@ -48,4 +54,19 @@ bool UVA_AttributeComponent::ApplyHealthChange(float Delta, AActor* Instigator)
 
 	return false;
 }
+
+void UVA_AttributeComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	// If is empty damage or is already dead, return
+	if (Damage <= 0.f || CurrentHealth <= 0.f) return;
+
+	// Subtract the damage clamping the minimum health at 0
+	CurrentHealth = FMath::Clamp(CurrentHealth - Damage, 0.f, MaxHealth);
+
+	if (CurrentHealth <= 0.f)
+	{
+		DamagedActor->Destroy();
+	}
+}
+
 #pragma endregion

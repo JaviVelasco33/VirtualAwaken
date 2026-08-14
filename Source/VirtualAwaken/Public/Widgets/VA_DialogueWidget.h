@@ -29,6 +29,13 @@ public:
   UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
   void OnDialogueFinished();
 
-	  UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
+	 UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
   void ClearChoices();
+
+	// Returns true while the typewriter is still typing.
+  UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
+  bool IsTyping();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "VA | Dialogue")
+  void SkipTypewriter();
 };

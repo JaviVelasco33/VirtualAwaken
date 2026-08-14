@@ -16,6 +16,8 @@
 #include "Core/Dialogues/VA_DialogueManager.h"
 #include "NPCs/VA_Companion.h"
 #include "Kismet/GameplayStatics.h"
+#include "Delegates/Delegate.h"
+#include "NPCs/Enemies/VA_BaseEnemy.h"
 
 #pragma region CONSTRUCTOR
 // Sets default values
@@ -71,6 +73,10 @@ AVA_Character::AVA_Character()
 	AttackCollisionComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("AttackCollisionComponent"));
 	AttackCollisionComponent->SetupAttachment(GetMesh(), FName("WeaponSocket"));
 	AttackCollisionComponent->SetBoxExtent(FVector(10.f, 10.f, 10.f), true);
+	AttackCollisionComponent->OnComponentBeginOverlap.AddDynamic(this, &AVA_Character::OnBoxBeginOverlap);
+	AttackCollisionComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	AttackCollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
+	AttackCollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 }
 #pragma endregion
 
@@ -634,4 +640,23 @@ void AVA_Character::ApplyDashCD()
 {
 	bCanDash = true;
 }
+#pragma endregion
+
+#pragma region ATTACK
+void AVA_Character::OnBoxBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (AVA_BaseEnemy* Enemy = Cast<AVA_BaseEnemy>(OtherActor))
+	{
+		UGameplayStatics::ApplyDamage(OtherActor, AttackDamage, GetInstigatorController(), this, UDamageType::StaticClass());
+	}
+}
+
+void AVA_Character::SetAttackCollisionEnabled(bool bEnable)
+{
+	if (AttackCollisionComponent)
+	{
+		AttackCollisionComponent->SetCollisionEnabled(bEnable ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+	}
+}
+
 #pragma endregion
