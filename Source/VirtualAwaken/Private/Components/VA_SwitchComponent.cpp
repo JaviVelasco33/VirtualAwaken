@@ -45,12 +45,6 @@ void UVA_SwitchComponent::ToggleSwitch()
 
   bIsOn = !bIsOn;
   NotifyTargets();
-
-	// Reset
-	if (bShouldReset && bIsOn)
-	{
-		GetWorld()->GetTimerManager().SetTimer(TH_Reset, this, &UVA_SwitchComponent::ToggleSwitch, ResetDelay);
-	}
 }
 
 void UVA_SwitchComponent::NotifyTargets()

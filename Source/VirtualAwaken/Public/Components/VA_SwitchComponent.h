@@ -28,10 +28,6 @@ public:
 		
 #pragma region VARIABLES
 protected:
-	// The switch is On?
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | State")
-	bool bIsOn = false;
-
 	// Can interact with the switch?
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | State")
 	bool bCanInteract = true;
@@ -40,13 +36,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | State")
 	bool bIsOneTimeActivation = false;
 
-	// Should return to default after a time?
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Reset")
-	bool bShouldReset = false;
-
-	// Time to reset in seconds
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Reset", meta = (EditCondition = "bShouldReset"))
-	float ResetDelay = 2.0f;
+private:
+	bool bIsOn = false;
 #pragma endregion
 
 #pragma region TARGETS
@@ -65,7 +56,5 @@ public:
 protected:
 	void NotifyTargets();
 
-	// Timer for reset when should reset
-	FTimerHandle TH_Reset;
 };
 #pragma endregion

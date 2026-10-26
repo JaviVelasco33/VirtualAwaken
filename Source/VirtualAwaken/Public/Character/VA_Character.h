@@ -8,6 +8,7 @@
 #include "Core/VA_InteractionSettings.h"
 #include "Engine/TimerHandle.h"
 #include "Core/Types/VA_V311Phase.h"
+#include "Blueprint/UserWidget.h"
 #include "VA_Character.generated.h"
 
 class AVA_Companion;
@@ -223,6 +224,7 @@ public:
 #pragma endregion
 
 #pragma region COMPANION
+public:
 	// Pointer that will save the companion
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "VA | Companion")
 	TObjectPtr<AVA_Companion> ActiveCompanion;
@@ -230,6 +232,37 @@ public:
 	// Search and attach companion
 	UFUNCTION(BlueprintCallable, Category = "VA | Companion")
 	void AttachCompanion();
+
+	// Getter of the Active state
+	UFUNCTION(BlueprintCallable, Category = "VA | Companion")
+	bool IsCompaActive() const { return bCompaActive; }
+
+protected:
+	// Function to show the companion widget.
+	UFUNCTION(BlueprintImplementableEvent, Category = "VA | Companion")
+  void ShowCompaWidget();
+
+	// Function to hide the companion widget.
+	UFUNCTION(BlueprintImplementableEvent, Category = "VA | Companion")
+  void HideCompaWidget();
+
+  // Function to handle the companion order input started.
+	void OnCompanionOrderStarted(const FInputActionInstance& Instance);
+
+	// Function to handle the companion order input completed.
+	void OnCompanionOrderCompleted(const FInputActionInstance& Instance);
+
+	// Function to update the selected button in companion widget.
+	UFUNCTION(BlueprintImplementableEvent, Category = "VA | Companion")
+  void UpdateCompaSelectedButton(int32 OrderIndex);
+
+	UPROPERTY()
+	const UInputAction* CurrentActiveOrderAction = nullptr;
+
+private:
+	bool bCompaActive = false;
+  bool bIsCompaWidgetOpen = false;
+	FTimerHandle TH_DelayCompaWidget;
 #pragma endregion
 
 #pragma region DASH

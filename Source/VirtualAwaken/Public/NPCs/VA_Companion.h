@@ -80,11 +80,10 @@ public:
 	// Order 4 - Start Distraction
 	void StartDistractionProtocol();
 
-	// Order 4- Stop Distraction
+	// Order 4 - Stop Distraction
 	void StopDistractionProtocol();
 
-protected:
-	UPROPERTY(EditAnywhere, Category = "VA | Abilities")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VA | Abilities")
     float AbilitiesCD = 10.0f;
 #pragma region SCANNER
 protected:
@@ -182,6 +181,27 @@ private:
 
 #pragma endregion
 
+public:
+	UFUNCTION(BlueprintCallable, Category = "VA | Cooldown")
+  void ResetAssaultCooldown() { bIsAssaultOnCD = false; }
+  UFUNCTION(BlueprintCallable, Category = "VA | Cooldown")
+	void ResetGasCooldown() { bIsGasOnCD = false; }
+  UFUNCTION(BlueprintCallable, Category = "VA | Cooldown")
+	void ResetRepairCooldown() { bIsRepairOnCD = false; }
+  UFUNCTION(BlueprintCallable, Category = "VA | Cooldown")
+	void ResetDistractCooldown() { bIsDistractOnCD = false; }
+
+	UFUNCTION(BlueprintCallable, Category = "VA | Cooldown")
+	bool IsAssaultCooldown() { return bIsAssaultOnCD; }
+	UFUNCTION(BlueprintCallable, Category = "VA | Cooldown")
+	bool IsGasCooldown() { return bIsGasOnCD; }
+	UFUNCTION(BlueprintCallable, Category = "VA | Cooldown")
+	bool IsRepairCooldown() { return bIsRepairOnCD; }
+	UFUNCTION(BlueprintCallable, Category = "VA | Cooldown")
+	bool IsDistractCooldown() { return bIsDistractOnCD; }
+
+  void HandleBasicFollow(float DeltaTime);
+
 private:
 	bool bIsCompanionBusy = false;
 	bool bIsAssaultOnCD = false;
@@ -200,12 +220,7 @@ private:
 	int32 ReturnStage = 0; // 0: Idle/Active, 1: Ascending, 2: Teleport & Descend
 	FVector ReturnTargetLocation;
 
-	void ResetAssaultCooldown() { bIsAssaultOnCD = false; }
-	void ResetGasCooldown() { bIsGasOnCD = false; }
-	void ResetRepairCooldown() { bIsRepairOnCD = false; }
-	void ResetDistractCooldown() { bIsDistractOnCD = false; }
 
-	void HandleBasicFollow(float DeltaTime);
 
 #pragma endregion
 };

@@ -44,6 +44,19 @@ void AVA_MovingActor::BeginPlay()
     EndRot = StartRot + FRotator(FinalPosition.Y, FinalPosition.Z, FinalPosition.X);
   }
 	
+  if (bStartActivated)
+  {
+    if (MovementType == EVA_MovementType::Translation)
+    {
+      PivotComp->SetRelativeLocation(EndPos);
+    }
+    else
+    {
+      PivotComp->SetRelativeRotation(EndRot);
+    }
+    CurrentAlpha = bIsAtTarget ? 0.0f : 1.0f;
+    bIsAtTarget = !bIsAtTarget;
+  }
 }
 
 // Called every frame
@@ -77,10 +90,20 @@ void AVA_MovingActor::Tick(float DeltaTime)
     bIsAtTarget = !bIsAtTarget; // Switch target for next time
     bIsMoving = false;
     SetActorTickEnabled(false);
+    // Reset
+    if (bShouldReset)
+    {
+      GetWorld()->GetTimerManager().SetTimer(TH_Reset, this, &AVA_MovingActor::ResetMovement, ResetDelay);
+    }
   }
 }
 
-
+void AVA_MovingActor::ResetMovement()
+{
+  if (bIsMoving) return;
+  bIsMoving = true;
+  SetActorTickEnabled(true);
+}
 
 #pragma endregion
 
@@ -99,6 +122,7 @@ FName AVA_MovingActor::GetInteractionRowName_Implementation()
 {
   switch (InteractionAction)
   {
+    default:
     case EVA_InteractionType::Interact:
       return FName("Interact");
       break;
@@ -113,9 +137,6 @@ FName AVA_MovingActor::GetInteractionRowName_Implementation()
       break;
     case EVA_InteractionType::Grab:
       return FName("Grab");
-      break;
-    default:
-      return FName("Interact");
       break;
   }
 }

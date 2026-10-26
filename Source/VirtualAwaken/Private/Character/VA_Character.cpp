@@ -192,10 +192,16 @@ void AVA_Character::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EIC->BindAction(SprintAction, ETriggerEvent::Started, this, &AVA_Character::ToggleSprint);
 
 		// Link the orders action
-		EIC->BindAction(Order1Action, ETriggerEvent::Started, this, &AVA_Character::CompanionOrders);
-		EIC->BindAction(Order2Action, ETriggerEvent::Started, this, &AVA_Character::CompanionOrders);
-		EIC->BindAction(Order3Action, ETriggerEvent::Started, this, &AVA_Character::CompanionOrders);
-		EIC->BindAction(Order4Action, ETriggerEvent::Started, this, &AVA_Character::CompanionOrders);
+		EIC->BindAction(Order1Action, ETriggerEvent::Started, this, &AVA_Character::OnCompanionOrderStarted);
+		EIC->BindAction(Order2Action, ETriggerEvent::Started, this, &AVA_Character::OnCompanionOrderStarted);
+    EIC->BindAction(Order3Action, ETriggerEvent::Started, this, &AVA_Character::OnCompanionOrderStarted);
+    EIC->BindAction(Order4Action, ETriggerEvent::Started, this, &AVA_Character::OnCompanionOrderStarted);
+		EIC->BindAction(Order1Action, ETriggerEvent::Completed, this, &AVA_Character::OnCompanionOrderCompleted);
+		EIC->BindAction(Order2Action, ETriggerEvent::Completed, this, &AVA_Character::OnCompanionOrderCompleted);
+		EIC->BindAction(Order3Action, ETriggerEvent::Completed, this, &AVA_Character::OnCompanionOrderCompleted);
+		EIC->BindAction(Order4Action, ETriggerEvent::Completed, this, &AVA_Character::OnCompanionOrderCompleted);
+
+
 
 		// Link the map action
 		EIC->BindAction(MapAction, ETriggerEvent::Started, this, &AVA_Character::ShowMap);
@@ -443,40 +449,49 @@ void AVA_Character::CompanionOrders(const FInputActionInstance& Instance)
 	// Get the action that was just pressed
 	const UInputAction* TriggeredAction = Instance.GetSourceAction();
 
-	if (TriggeredAction == Order1Action)
+	if (bIsCompaWidgetOpen && TriggeredAction == CurrentActiveOrderAction)
 	{
-    ActiveCompanion->StartAssaultProtocol();
-    if (GEngine)
+		if (TriggeredAction == Order1Action)
 		{
+			ActiveCompanion->StartAssaultProtocol();
+			if (GEngine)
+			{
 				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_1")));
+			}
 		}
-	}
 
-	if (TriggeredAction == Order2Action)
-	{
-		ActiveCompanion->StartGasProtocol();
-		if (GEngine)
+		else if (TriggeredAction == Order2Action)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_2")));
+			ActiveCompanion->StartGasProtocol();
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_2")));
+			}
 		}
-	}
 
-	if (TriggeredAction == Order3Action)
-	{
-		ActiveCompanion->StartRepairProtocol();
-    if (GEngine)
-    {
-      GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_3")));
-    }
-	}
-
-	if (TriggeredAction == Order4Action)
-	{
-		ActiveCompanion->StartDistractionProtocol();
-		if (GEngine)
+		else if (TriggeredAction == Order3Action)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_4")));
+			ActiveCompanion->StartRepairProtocol();
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_3")));
+			}
 		}
+
+		else if (TriggeredAction == Order4Action)
+		{
+			ActiveCompanion->StartDistractionProtocol();
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::Printf(TEXT("CompanionOrder_4")));
+			}
+		}
+
+    // Reset the variables and close the widget
+		bIsCompaWidgetOpen = false;
+    CurrentActiveOrderAction = nullptr;
+    HideCompaWidget();
+		UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 1.0f);
 	}
 }
 
@@ -626,13 +641,55 @@ void AVA_Character::AttachCompanion()
 			ActiveCompanion->SetActorTickEnabled(true);
 
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, TEXT("C0M-P4 added and systems activated."));
+			bCompaActive = true;
 		}
 	}
 	else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Error: Doesn't found any C0M-P4 in this level."));
+		bCompaActive = false;
 	}
 }
+
+void AVA_Character::OnCompanionOrderStarted(const FInputActionInstance& Instance)
+{
+	if (bInDialogueMode || !ActiveCompanion) return;
+
+	// Cancel the previous timer if player 
+	GetWorld()->GetTimerManager().ClearTimer(TH_DelayCompaWidget);
+
+	UGameplayStatics::SetGlobalTimeDilation(GetWorld(), 0.8f);
+
+  const UInputAction* TriggeredAction = Instance.GetSourceAction();
+	CurrentActiveOrderAction = TriggeredAction;
+
+  // Check which order was pressed and set the index accordingly
+	int32 OrderIndex = 0;
+	if (TriggeredAction == Order1Action) OrderIndex = 1;
+	else if (TriggeredAction == Order2Action) OrderIndex = 2;
+	else if (TriggeredAction == Order3Action) OrderIndex = 3;
+  else if (TriggeredAction == Order4Action) OrderIndex = 4;
+
+  // If the widget isn't open, open it and execute the animation
+	if (!bIsCompaWidgetOpen)
+	{
+		bIsCompaWidgetOpen = true;
+		ShowCompaWidget();
+  }
+
+  // Update the selected button without launch the animation again
+	UpdateCompaSelectedButton(OrderIndex);
+}
+
+void AVA_Character::OnCompanionOrderCompleted(const FInputActionInstance& Instance)
+{
+	if (bInDialogueMode || !ActiveCompanion) return;
+
+	GetWorld()->GetTimerManager().ClearTimer(TH_DelayCompaWidget);
+
+	GetWorld()->GetTimerManager().SetTimer(TH_DelayCompaWidget, [this, Instance]() {CompanionOrders(Instance);}, 0.35f, false);
+}
+
 #pragma endregion
 
 #pragma region DASH

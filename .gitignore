@@ -56,3 +56,9 @@ Content/UE_Characters/
 Content/3D_Models/
 Content/Levels/
 Content/UI_Designs/
+
+# Claude Code
+.claude/
+compile_commands.json
+.cache/
+.mcp.json

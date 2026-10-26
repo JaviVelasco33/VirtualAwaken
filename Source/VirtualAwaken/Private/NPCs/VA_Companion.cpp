@@ -163,6 +163,7 @@ void AVA_Companion::StopAssaultProtocol()
   CurrentCombatTarget = nullptr;
 	bInAssaultMode = false;
 	bIsCompanionBusy = false;
+	bIsAssaultOnCD = true;
 
 	// Start Cooldown countdown
 	GetWorldTimerManager().SetTimer(CooldownTH, this, &AVA_Companion::ResetAssaultCooldown, AbilitiesCD, false);
