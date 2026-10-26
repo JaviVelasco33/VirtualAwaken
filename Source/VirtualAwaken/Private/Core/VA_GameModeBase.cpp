@@ -8,7 +8,7 @@
 AVA_GameModeBase::AVA_GameModeBase()
 {
   // Search the character class and assign it as default
-  static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Character/BP_VA_Character.BP_VA_Character_C"));
+  static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/Programming/Character/BP_VA_Character.BP_VA_Character_C"));
 
     if (PlayerPawnBPClass.Class != nullptr)
     {
