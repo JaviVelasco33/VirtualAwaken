@@ -16,6 +16,7 @@ Plugins/*/Intermediate/
 # Visual Studio files
 .vs/
 *.sln
+*.slnx
 *.suo
 *.user
 *.VC.db
